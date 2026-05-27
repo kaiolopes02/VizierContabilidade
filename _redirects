@@ -1,28 +1,12 @@
 # ============================================
-# VIZIER - REDIRECTS & SECURITY
+# VIZIER - REDIRECTS
 # Cloudflare Pages _redirects file
 # ============================================
+# REGRAS DO CLOUDFLARE PAGES:
+# - Status permitidos: 200, 301, 302, 303, 307, 308
+# - Status 404 NÃO é permitido!
+# - URLs no campo "from" devem ser relativas (não http:// ou https://)
+# ============================================
 
-# Force HTTPS on custom domain (redundância com HSTS)
-http://viziercontabilidade.com.br/* https://viziercontabilidade.com.br/:splat 301
-http://www.viziercontabilidade.com.br/* https://www.viziercontabilidade.com.br/:splat 301
-
-# WWW to non-WWW redirect
+# WWW para non-WWW (redirecionamento 301 permanente)
 https://www.viziercontabilidade.com.br/* https://viziercontabilidade.com.br/:splat 301
-
-# Block common attack paths (return 404)
-/.env/* /404.html 404
-/.git/* /404.html 404
-/.svn/* /404.html 404
-/.hg/* /404.html 404
-/config.php /404.html 404
-/config.json /404.html 404
-/wp-admin/* /404.html 404
-/wp-login.php /404.html 404
-/xmlrpc.php /404.html 404
-/admin/* /404.html 404
-/phpmyadmin/* /404.html 404
-/.htaccess /404.html 404
-/.htpasswd /404.html 404
-/robots.txt /404.html 404
-/server-status /404.html 404
