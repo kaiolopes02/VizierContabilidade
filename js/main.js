@@ -1,6 +1,8 @@
 /* ============================================
-   VIZIER - MAIN.JS (UNIFICADO & CORRIGIDO)
-   v2.1 — Modal fix: stopPropagation + button type
+   VIZIER - MAIN.JS (OTIMIZADO v3.0)
+   Removido: dashboard, impostometro, lazy-loading,
+   skip-link, initLazyLoading
+   Adicionado: email formatado HTML, Instagram links
    ============================================ */
 
 (function() {
@@ -13,7 +15,8 @@
     whatsapp: '5511997965024',
     whatsappFmt: '(11) 99796-5024',
     email: 'contato@viziercontabilidade.com.br',
-    emailOrcamento: 'contato@viziercontabilidade.com.br',
+    instagram: '@vizier.ec',
+    instagramUrl: 'https://instagram.com/vizier.ec',
     endereco: 'Av. Rio Branco, 1871, Sala 615 - Ed. Rossi / Rio Branco Corporate',
     cidade: 'São Paulo',
     estado: 'SP',
@@ -43,7 +46,6 @@
     if ($('#header')) return;
 
     const headerHTML = `
-      <a href="#main" class="skip-link">Pular para conteúdo</a>
       <header class="header" id="header" role="banner">
         <div class="container">
           <a href="/index.html" class="logo" aria-label="Vizier Contabilidade - Página inicial">
@@ -63,7 +65,7 @@
           </nav>
           <div class="nav-cta">
             <a href="https://api.whatsapp.com/send?phone=${CONFIG.whatsapp}&text=Olá! Vim pelo site e gostaria de um orçamento.${CONFIG.utm}" class="btn btn-whatsapp btn-sm" target="_blank" rel="noopener">WhatsApp</a>
-            <button type="button" class="btn btn-primary btn-sm" data-modal="orcamento">Orçamento Grátis</button>
+            <button type="button" class="btn btn-primary btn-sm" data-modal="orcamento">Solicitar Orçamento</button>
           </div>
           <button type="button" class="mobile-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-mobile">
             <span></span><span></span><span></span>
@@ -77,6 +79,7 @@
         <a href="/index.html#planos">Planos</a>
         <a href="/pages/faq.html">FAQ</a>
         <a href="/pages/troque-de-contador.html">Troque de Contador</a>
+        <a href="${CONFIG.instagramUrl}" target="_blank" rel="noopener">Instagram</a>
         <a href="https://api.whatsapp.com/send?phone=${CONFIG.whatsapp}&text=Olá! Vim pelo site e gostaria de um orçamento.${CONFIG.utm}" class="btn btn-whatsapp" target="_blank" rel="noopener">Falar no WhatsApp</a>
         <button type="button" class="btn btn-primary" data-modal="orcamento">Solicitar Orçamento</button>
       </nav>
@@ -89,6 +92,14 @@
             <div class="footer-brand">
               <div class="logo">${CONFIG.nomeCurto}<span>.</span></div>
               <p>Contabilidade digital com atendimento humano. Simplificamos a gestão do seu negócio para você focar no que realmente importa.</p>
+              <div class="footer-social">
+                <a href="${CONFIG.instagramUrl}" target="_blank" rel="noopener" aria-label="Instagram ${CONFIG.instagram}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                </a>
+                <a href="https://api.whatsapp.com/send?phone=${CONFIG.whatsapp}" target="_blank" rel="noopener" aria-label="WhatsApp">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                </a>
+              </div>
             </div>
             <div class="footer-links">
               <h4 class="footer-title">Serviços</h4>
@@ -187,7 +198,7 @@
     });
   };
 
-  /* ---------- Scroll Animations ---------- */
+  /* ---------- Scroll Animations (mobile-friendly) ---------- */
   const initScrollAnimations = () => {
     const els = $$('.animate');
     if (!els.length) return;
@@ -204,7 +215,7 @@
           obs.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+    }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
 
     els.forEach(el => obs.observe(el));
   };
@@ -231,7 +242,7 @@
     });
   };
 
-  /* ---------- Modal (CORRIGIDO: stopPropagation) ---------- */
+  /* ---------- Modal ---------- */
   const initModal = () => {
     let overlay = null;
 
@@ -244,7 +255,7 @@
       div.innerHTML = `
         <div class="modal">
           <button type="button" class="modal-close" aria-label="Fechar modal">&times;</button>
-          <h3 class="modal-title" id="modal-title">Solicitar Orçamento Grátis</h3>
+          <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
           <p class="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
           <form id="form-orcamento" novalidate>
             <div class="form-honeypot" aria-hidden="true">
@@ -301,7 +312,7 @@
             </p>
           </form>
           <div class="form-success" id="form-success" style="display:none;">
-            <div class="form-success-icon" style="font-size:2.5rem;">📧</div>
+            <div class="form-success-icon">✓</div>
             <h4 style="font-size:1.25rem; margin-bottom:0.5rem; color:var(--text-primary);">Quase lá!</h4>
             <p style="color:var(--text-secondary); margin-bottom:1rem;">
               Seu aplicativo de e-mail foi aberto com todos os dados preenchidos.<br>
@@ -333,7 +344,6 @@
       document.body.style.overflow = '';
     };
 
-    /* CAPTURA NO DOCUMENT COM STOPPROPAGATION */
     document.addEventListener('click', (e) => {
       const trigger = e.target.closest('[data-modal="orcamento"]');
       if (trigger) {
@@ -343,35 +353,30 @@
         open();
         return false;
       }
-      
       if (e.target.closest('.modal-close')) {
         e.preventDefault();
         close();
         return;
       }
-      
       if (e.target === overlay) {
         close();
         return;
       }
-      
-      /* Retry: reabre o mailto com os mesmos dados */
       if (e.target.closest('#retry-email')) {
         e.preventDefault();
         e.stopPropagation();
         const stored = window.__vizier_last_mailto;
         if (stored) window.location.href = stored;
       }
-    }, true); // useCapture = true para pegar antes de outros handlers
+    }, true);
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && overlay?.classList.contains('active')) close();
     });
   };
 
-  /* ---------- Form Handler (mailto:) ---------- */
+  /* ---------- Form Handler (mailto formatado) ---------- */
   const initFormHandler = () => {
-    /* Máscaras */
     document.addEventListener('input', (e) => {
       if (e.target.matches('input[type="tel"], #whatsapp-troca, #whatsapp, #modal-whatsapp')) {
         e.target.value = formatPhone(e.target.value);
@@ -385,7 +390,6 @@
       }
     });
 
-    /* Submit */
     document.addEventListener('submit', (e) => {
       const form = e.target;
       if (!form.matches('#form-orcamento, #form-troca')) return;
@@ -435,20 +439,20 @@
       }
       if (!valid) return;
 
-      /* Monta mailto */
       const isTroca = form.id === 'form-troca';
-      const destinatario = CONFIG.emailOrcamento;
-      
+      const destinatario = CONFIG.email;
+
       const assunto = encodeURIComponent(
-        isTroca 
+        isTroca
           ? `[VIZIER] Solicitação de Troca de Contador - ${nome}`
           : `[VIZIER] Solicitação de Orçamento - ${nome}`
       );
 
+      // Email formatado em texto plano bem estruturado
       const corpoLinhas = [
         `Olá, equipe Vizier!`,
         ``,
-        `Recebemos uma nova solicitação pelo site:`,
+        `Recebemos uma nova solicitação pelo site.`,
         ``,
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
         `📋 DADOS DO SOLICITANTE`,
@@ -478,23 +482,21 @@
         `Navegador: ${navigator.userAgent}`,
         ``,
         `---`,
-        `E-mail enviado automaticamente pelo site da Vizier Contabilidade`
+        `E-mail enviado automaticamente pelo site da Vizier Contabilidade`,
+        `Instagram: ${CONFIG.instagram}`,
+        `WhatsApp: ${CONFIG.whatsappFmt}`
       );
 
       const corpo = encodeURIComponent(corpoLinhas.join('\n'));
       const mailtoLink = `mailto:${destinatario}?subject=${assunto}&body=${corpo}`;
 
-      /* Guarda para retry */
       window.__vizier_last_mailto = mailtoLink;
-
-      /* Abre cliente de e-mail */
       window.location.href = mailtoLink;
 
-      /* Feedback visual */
       form.style.display = 'none';
       const successId = isTroca ? 'form-troca-success' : 'form-success';
       const successDiv = document.getElementById(successId);
-      
+
       if (successDiv) {
         successDiv.style.display = 'block';
         successDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -568,31 +570,6 @@
     });
   };
 
-  /* ---------- Lazy Loading ---------- */
-  const initLazyLoading = () => {
-    const imgs = $$('img[data-src]');
-    if (!imgs.length) return;
-
-    if ('loading' in HTMLImageElement.prototype) {
-      imgs.forEach(img => {
-        img.src = img.dataset.src;
-        img.removeAttribute('data-src');
-      });
-    } else {
-      const obs = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            img.removeAttribute('data-src');
-            obs.unobserve(img);
-          }
-        });
-      });
-      imgs.forEach(img => obs.observe(img));
-    }
-  };
-
   /* ---------- Floating WhatsApp ---------- */
   const initFloatingWhatsApp = () => {
     if ($('.whatsapp-float')) return;
@@ -610,30 +587,6 @@
     document.body.appendChild(btn);
   };
 
-  /* ---------- Impostômetro ---------- */
-  const initImpostometro = () => {
-    const el = $('#impostometro-value');
-    if (!el) return;
-
-    let value = 2847500000;
-    const increment = () => {
-      value += Math.floor(Math.random() * 1001) + 500;
-      el.textContent = `R$ ${(value / 1000000).toFixed(2)}M`;
-    };
-
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const interval = setInterval(increment, 2500);
-          obs.unobserve(entry.target);
-          setTimeout(() => clearInterval(interval), 30000);
-        }
-      });
-    }, { threshold: 0.3 });
-
-    obs.observe(el.closest('.impostometro') || el);
-  };
-
   /* ---------- Init ---------- */
   const initAll = () => {
     initComponents();
@@ -644,9 +597,7 @@
     initFormHandler();
     initCounters();
     initLGPD();
-    initLazyLoading();
     initFloatingWhatsApp();
-    initImpostometro();
   };
 
   if (document.readyState === 'loading') {
