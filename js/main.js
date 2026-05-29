@@ -49,11 +49,7 @@
       <header class="header" id="header" role="banner">
         <div class="container">
           <a href="/index.html" class="logo" aria-label="Vizier Contabilidade - Página inicial">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <rect width="32" height="32" rx="8" fill="url(#logoGrad)"/>
-              <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="Inter">V</text>
-              <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#1e40af"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs>
-            </svg>
+            <img src="/assets/images/Vizier.jpeg" alt="" height="32" style="height:32px; width:auto; border-radius:8px; object-fit:contain;">
             ${CONFIG.nomeCurto}<span>.</span>
           </a>
           <nav class="nav-desktop" role="navigation" aria-label="Navegação principal">
