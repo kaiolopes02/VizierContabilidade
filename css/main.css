@@ -52,6 +52,8 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -215,7 +217,8 @@ p {
   box-shadow: var(--shadow);
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-primary:active {
   background: var(--primary-dark);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
@@ -227,7 +230,8 @@ p {
   border: 2px solid var(--primary);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover,
+.btn-secondary:active {
   background: var(--primary);
   color: var(--white);
   transform: translateY(-2px);
@@ -239,7 +243,8 @@ p {
   box-shadow: var(--shadow);
 }
 
-.btn-whatsapp:hover {
+.btn-whatsapp:hover,
+.btn-whatsapp:active {
   background: var(--secondary-dark);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
@@ -251,7 +256,8 @@ p {
   font-weight: 700;
 }
 
-.btn-accent:hover {
+.btn-accent:hover,
+.btn-accent:active {
   background: var(--accent-light);
   transform: translateY(-2px);
 }
@@ -280,7 +286,8 @@ p {
   flex-direction: column;
 }
 
-.card:hover {
+.card:hover,
+.card:active {
   transform: translateY(-8px);
   box-shadow: var(--shadow-xl);
   border-color: var(--primary-light);
@@ -571,7 +578,8 @@ p {
   transition: var(--transition);
 }
 
-.footer-social a:hover {
+.footer-social a:hover,
+.footer-social a:active {
   background: var(--primary);
   transform: translateY(-2px);
 }
@@ -591,7 +599,8 @@ p {
   transition: var(--transition);
 }
 
-.footer-links a:hover {
+.footer-links a:hover,
+.footer-links a:active {
   color: var(--white);
   padding-left: 4px;
 }
@@ -809,7 +818,8 @@ p {
   transition: var(--transition);
 }
 
-.process-step:hover {
+.process-step:hover,
+.process-step:active {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
@@ -1163,7 +1173,8 @@ p {
   line-height: 1;
 }
 
-.modal-close:hover {
+.modal-close:hover,
+.modal-close:active {
   background: var(--neutral);
   color: var(--text-primary);
 }
@@ -1285,6 +1296,8 @@ p {
   transform: translateY(30px);
   transition: opacity 0.65s ease, transform 0.65s ease;
   will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .animate.visible {
@@ -1302,7 +1315,7 @@ p {
 @media (max-width: 767px) {
   .animate {
     transition-duration: 0.55s;
-    transform: translateY(20px);
+    transform: translateY(15px);
   }
 }
 

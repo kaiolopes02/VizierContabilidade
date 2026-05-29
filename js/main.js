@@ -215,7 +215,7 @@
           obs.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
+    }, { threshold: 0.05, rootMargin: '0px 0px 60px 0px' });
 
     els.forEach(el => obs.observe(el));
   };
@@ -448,7 +448,6 @@
           : `[VIZIER] Solicitação de Orçamento - ${nome}`
       );
 
-      // Email formatado em texto plano bem estruturado
       const corpoLinhas = [
         `Olá, equipe Vizier!`,
         ``,
@@ -533,7 +532,7 @@
           obs.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.5 });
+    }, { threshold: 0.15 });
 
     counters.forEach(c => obs.observe(c));
   };
