@@ -49,7 +49,7 @@
       <header class="header" id="header" role="banner">
         <div class="container">
           <a href="/index.html" class="logo" aria-label="Vizier Contabilidade - Página inicial">
-            <img src="/assets/images/Vizier.jpeg" alt="" height="32" style="height:32px; width:auto; border-radius:8px; object-fit:contain;">
+            <img src="/assets/images/Vizier.png" alt="" height="32" style="height:32px; width:auto; border-radius:8px; object-fit:contain;">
             ${CONFIG.nomeCurto}<span>.</span>
           </a>
           <nav class="nav-desktop" role="navigation" aria-label="Navegação principal">
