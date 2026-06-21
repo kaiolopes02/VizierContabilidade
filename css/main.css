@@ -960,6 +960,7 @@ p {
   font-weight: 500;
 }
 
+/*
 /* App */
 .app-section .about-grid {
   direction: rtl;
@@ -994,6 +995,7 @@ p {
   transform: translateY(-2px);
 }
 
+*/
 /* Testimonials */
 .testimonials-grid {
   margin-top: 2rem;
