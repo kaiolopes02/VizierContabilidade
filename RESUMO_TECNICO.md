@@ -76,7 +76,6 @@
 - [x] Planos de Preços (Starter, Pro, Personal) - **SEM VALORES**
 - [x] Números / Social Proof (contadores animados)
 - [x] Impostômetro (contador animado em tempo real)
-- [x] App Mobile (cross-selling com badges download)
 - [x] Prova Social (depoimentos reais da Vizier)
 - [x] FAQ (6+ perguntas com accordion + Schema.org)
 - [x] Manifesto Final
