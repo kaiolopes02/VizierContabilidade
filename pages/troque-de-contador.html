@@ -54,7 +54,9 @@
                         <div style="background:var(--white); border-radius:var(--radius-xl); padding:2.5rem; box-shadow:var(--shadow-lg); border:1px solid var(--neutral);">
                             <h3 style="margin-bottom:0.5rem;">Solicitar transferência</h3>
                             <p style="color:var(--text-secondary); margin-bottom:1.5rem; font-size:0.95rem;">Preencha os dados abaixo e nossa equipe entrará em contato em até 24h.</p>
-                            <form id="form-troca" novalidate>
+                            <form id="form-troca" action="https://api.staticforms.xyz/submit" method="POST">
+                                <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
+                                <input type="hidden" name="redirect" value="/obrigado.html">
                                 <div class="form-honeypot" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
                                 <div class="form-group">
                                     <label class="form-label" for="nome-troca">Nome completo *</label>
@@ -176,8 +178,8 @@
             else if (v.length > 2) e.target.value = `${v.slice(0,2)}.${v.slice(2)}`;
         });
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        form.addEventListener('submit', (e) => {
+            e.preventDefault(); // Prevent default to handle validation first
             let valid = true;
             form.querySelectorAll('.form-group').forEach(g => g.classList.remove('error'));
 
@@ -193,11 +195,9 @@
 
             if (!valid) return;
 
-            const btn = form.querySelector('button[type="submit"]');
-            btn.textContent = 'Enviando...'; btn.disabled = true;
-            await new Promise(r => setTimeout(r, 1500));
-            form.style.display = 'none';
-            document.getElementById('form-troca-success').style.display = 'block';
+            // Form is valid, submit naturally to Static Forms API
+            // The form already has the correct action, accessKey, and redirect inputs
+            form.submit();
         });
     });
     </script>

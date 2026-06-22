@@ -280,6 +280,41 @@ p {
   font-size: 1.125rem;
 }
 
+/* Button disabled state */
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Disabled state variations */
+.btn-primary:disabled,
+.btn-primary[disabled] {
+  background: var(--primary);
+  color: var(--white);
+}
+
+.btn-secondary:disabled,
+.btn-secondary[disabled] {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-whatsapp:disabled,
+.btn-whatsapp[disabled] {
+  background: var(--secondary);
+  color: var(--white);
+}
+
+.btn-accent:disabled,
+.btn-accent[disabled] {
+  background: var(--accent);
+  color: var(--text-primary);
+}
+
 /* ===== CARDS ===== */
 .card {
   background: var(--white);
@@ -1235,6 +1270,7 @@ p {
 .form-select,
 .form-textarea {
   width: 100%;
+  min-height: 44px;
   padding: 0.875rem 1rem;
   border: 2px solid var(--neutral);
   border-radius: var(--radius);

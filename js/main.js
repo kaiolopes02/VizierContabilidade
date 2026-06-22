@@ -253,7 +253,9 @@
           <button type="button" class="modal-close" aria-label="Fechar modal">&times;</button>
           <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
           <p class="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
-          <form id="form-orcamento" novalidate>
+          <form id="form-orcamento" action="https://api.staticforms.xyz/submit" method="POST">
+            <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
+            <input type="hidden" name="redirect" value="/obrigado.html">
             <div class="form-honeypot" aria-hidden="true">
               <input type="text" name="website" tabindex="-1" autocomplete="off">
             </div>
@@ -301,6 +303,14 @@
             <div class="form-group">
               <label class="form-label" for="modal-mensagem">Mensagem (opcional)</label>
               <textarea id="modal-mensagem" name="mensagem" class="form-textarea" placeholder="Conte-nos mais sobre sua necessidade..."></textarea>
+            </div>
+            <div class="form-group">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="lgpd-consent" name="lgpd_consent" required>
+                <label class="form-check-label" for="lgpd-consent">
+                  Declaro que li e concordo com a <a href="/pages/politica-de-privacidade.html" target="_blank">Política de Privacidade</a> e com a <a href="/pages/termos-de-uso.html" target="_blank">Termos de Uso</a> da Vizier Contabilidade.
+                </label>
+              </div>
             </div>
             <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Enviar Solicitação</button>
             <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--text-light);">
@@ -351,12 +361,7 @@
         close();
         return;
       }
-      if (e.target.closest('#retry-email')) {
-        e.preventDefault();
-        e.stopPropagation();
-        const stored = window.__vizier_last_mailto;
-        if (stored) window.location.href = stored;
-      }
+      // Removed retry email mechanism - forms now submit directly to Static Forms API
     }, true);
 
     document.addEventListener('keydown', (e) => {
@@ -383,7 +388,7 @@
       const form = e.target;
       if (!form.matches('#form-orcamento, #form-troca')) return;
 
-      e.preventDefault();
+      e.preventDefault(); // Prevent default to handle validation first
       e.stopPropagation();
       form.querySelectorAll('.form-group').forEach(g => g.classList.remove('error'));
 
@@ -428,67 +433,9 @@
       }
       if (!valid) return;
 
-      const isTroca = form.id === 'form-troca';
-      const destinatario = CONFIG.email;
-
-      const assunto = encodeURIComponent(
-        isTroca
-          ? `[VIZIER] Solicitação de Troca de Contador - ${nome}`
-          : `[VIZIER] Solicitação de Orçamento - ${nome}`
-      );
-
-      const corpoLinhas = [
-        `Olá, equipe Vizier!`,
-        ``,
-        `Recebemos uma nova solicitação pelo site.`,
-        ``,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        `📋 DADOS DO SOLICITANTE`,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        `Nome: ${nome}`,
-        `E-mail: ${email}`,
-        `WhatsApp: ${whatsapp}`,
-      ];
-
-      if (cnpj) corpoLinhas.push(`CNPJ: ${cnpj}`);
-      if (tipoEmpresa) corpoLinhas.push(`Tipo de empresa: ${tipoEmpresa}`);
-      if (servico) corpoLinhas.push(`Serviço de interesse: ${servico}`);
-      if (contadorAtual) corpoLinhas.push(`Contador atual: ${contadorAtual}`);
-
-      corpoLinhas.push(
-        ``,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        `📝 MENSAGEM ADICIONAL`,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        mensagem || '(Nenhuma mensagem adicional)',
-        ``,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        `📍 ORIGEM`,
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-        `Página: ${window.location.href}`,
-        `Data/hora: ${new Date().toLocaleString('pt-BR')}`,
-        `Navegador: ${navigator.userAgent}`,
-        ``,
-        `---`,
-        `E-mail enviado automaticamente pelo site da Vizier Contabilidade`,
-        `Instagram: ${CONFIG.instagram}`,
-        `WhatsApp: ${CONFIG.whatsappFmt}`
-      );
-
-      const corpo = encodeURIComponent(corpoLinhas.join('\n'));
-      const mailtoLink = `mailto:${destinatario}?subject=${assunto}&body=${corpo}`;
-
-      window.__vizier_last_mailto = mailtoLink;
-      window.location.href = mailtoLink;
-
-      form.style.display = 'none';
-      const successId = isTroca ? 'form-troca-success' : 'form-success';
-      const successDiv = document.getElementById(successId);
-
-      if (successDiv) {
-        successDiv.style.display = 'block';
-        successDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      // Form is valid, submit naturally to Static Forms API
+      // The form already has the correct action, accessKey, and redirect inputs
+      form.submit();
     });
   };
 
