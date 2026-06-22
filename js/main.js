@@ -17,7 +17,7 @@
     email: 'contato@viziercontabilidade.com.br',
     instagram: '@vizier.ec',
     instagramUrl: 'https://instagram.com/vizier.ec',
-    endereco: 'Av. Rio Branco, 1871, Sala 615 - Ed. Rossi / Rio Branco Corporate',
+    endereco: 'AVENIDA PAULISTA, Nº 91, CONJ 905, BELA VISTA - SÃO PAULO - SP - 01311000',
     cidade: 'São Paulo',
     estado: 'SP',
     utm: '&utm_source=site&utm_medium=cta&utm_campaign=orcamento'
@@ -310,13 +310,6 @@
           <div class="form-success" id="form-success" style="display:none;">
             <div class="form-success-icon">✓</div>
             <h4 style="font-size:1.25rem; margin-bottom:0.5rem; color:var(--text-primary);">Quase lá!</h4>
-            <p style="color:var(--text-secondary); margin-bottom:1rem;">
-              Seu aplicativo de e-mail foi aberto com todos os dados preenchidos.<br>
-              <strong style="color:var(--primary); font-size:1.05rem;">Clique em "Enviar" no seu e-mail para finalizar.</strong>
-            </p>
-            <p style="font-size:0.875rem; color:var(--text-light); margin-bottom:0;">
-              Não abriu? <button type="button" id="retry-email" style="color:var(--primary); text-decoration:underline; font-weight:600; background:none; border:none; cursor:pointer; padding:0; font:inherit;">Clique aqui para tentar novamente</button>
-            </p>
           </div>
         </div>
       `;
