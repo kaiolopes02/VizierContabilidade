@@ -64,6 +64,7 @@ body {
   color: var(--text-primary);
   background: var(--white);
   overflow-x: hidden;
+  min-height: 100vh;
 }
 
 img {
@@ -122,6 +123,7 @@ ul, ol {
 .grid {
   display: grid;
   gap: 1.5rem;
+  align-items: center !important;
 }
 
 .grid > * {
@@ -654,7 +656,11 @@ p {
 
 /* ===== SECTIONS ===== */
 .section {
-  padding: 80px 0;
+  min-height: 100vh;
+  padding-top: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
 }
 
@@ -664,10 +670,11 @@ p {
 
 /* Hero */
 .hero {
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding-top: var(--header-height);
   background: linear-gradient(135deg, var(--neutral-light) 0%, var(--white) 50%, rgba(30, 64, 175, 0.03) 100%);
   position: relative;
@@ -688,7 +695,9 @@ p {
 .hero-content {
   position: relative;
   z-index: 2;
-  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .hero-label {
@@ -730,6 +739,7 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+  justify-content: center;
   margin-bottom: 3rem;
 }
 
