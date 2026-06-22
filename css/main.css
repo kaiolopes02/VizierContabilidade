@@ -96,6 +96,7 @@ ul, ol {
   max-width: var(--container);
   margin: 0 auto;
   padding: 0 16px;
+  text-align: center !important;
 }
 
 .sr-only {
@@ -291,6 +292,7 @@ p {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  text-align: center;
 }
 
 .card:hover,
@@ -661,6 +663,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
   position: relative;
 }
 
