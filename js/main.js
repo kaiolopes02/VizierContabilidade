@@ -23,6 +23,9 @@
     utm: '&utm_source=site&utm_medium=cta&utm_campaign=orcamento'
   };
 
+  // Static Forms endpoint (split to avoid obvious string)
+  const STATIC_FORMS_ENDPOINT = ['https://', 'api.staticforms.xyz', '/submit'].join('');
+
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
   const throttle = (fn, ms) => {
@@ -114,7 +117,7 @@
             <div class="footer-contact">
               <h4 class="footer-title">Contato</h4>
               <p>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.5 19.5 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                 ${CONFIG.whatsappFmt}
               </p>
               <p>
@@ -253,9 +256,9 @@
           <button type="button" class="modal-close" aria-label="Fechar modal">&times;</button>
           <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
           <p class="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
-          <form id="form-orcamento" action="https://api.staticforms.xyz/submit" method="POST">
+          <form id="form-orcamento" method="POST">
             <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
-            <input type="hidden" name="redirect" value="/obrigado.html">
+            <input type="hidden" name="redirect" value="/pages/obrigado.html">
             <div class="form-honeypot" aria-hidden="true">
               <input type="text" name="website" tabindex="-1" autocomplete="off">
             </div>
@@ -308,7 +311,7 @@
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="lgpd-consent" name="lgpd_consent" required>
                 <label class="form-check-label" for="lgpd-consent">
-                  Declaro que li e concordo com a <a href="/pages/politica-de-privacidade.html" target="_blank">Política de Privacidade</a> e com a <a href="/pages/termos-de-uso.html" target="_blank">Termos de Uso</a> da Vizier Contabilidade.
+                  Declaro que li e concordo com a <a href="/pages/politica-de-privacidade.html" target="_blank">Política de Privacidade</a> e com the <a href="/pages/termos-de-uso.html" target="_blank">Termos de Uso</a> da Vizier Contabilidade.
                 </label>
               </div>
             </div>
@@ -361,7 +364,6 @@
         close();
         return;
       }
-      // Removed retry email mechanism - forms now submit directly to Static Forms API
     }, true);
 
     document.addEventListener('keydown', (e) => {
@@ -388,12 +390,14 @@
       const form = e.target;
       if (!form.matches('#form-orcamento, #form-troca')) return;
 
-      e.preventDefault(); // Prevent default to handle validation first
-      e.stopPropagation();
       form.querySelectorAll('.form-group').forEach(g => g.classList.remove('error'));
 
       const honeypot = form.querySelector('[name="website"]');
-      if (honeypot?.value) return;
+      if (honeypot?.value) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
 
       const getVal = (name) => {
         const el = form.querySelector(`[name="${name}"]`);
@@ -431,11 +435,25 @@
         form.querySelector('[name="servico"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
-      if (!valid) return;
 
-      // Form is valid, submit naturally to Static Forms API
-      // The form already has the correct action, accessKey, and redirect inputs
-      form.submit();
+      if (!valid) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      // If we get here, form is valid.
+      // Set the action to the Static Forms endpoint (not visible in initial HTML)
+      form.action = STATIC_FORMS_ENDPOINT;
+
+      // Disable the submit button to prevent multiple clicks
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = 'Enviando...';
+      }
+
+      // We do not preventDefault, so the form will submit naturally.
     });
   };
 
