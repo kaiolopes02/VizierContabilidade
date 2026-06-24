@@ -256,7 +256,7 @@
           <button type="button" class="modal-close" aria-label="Fechar modal">&times;</button>
           <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
           <p class="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
-          <form id="form-orcamento" method="POST">
+          <form id="form-orcamento" action="javascript:void(0)" method="GET">
             <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
             <input type="hidden" name="redirect" value="/pages/obrigado.html">
             <div class="form-honeypot" aria-hidden="true">
@@ -308,12 +308,24 @@
               <textarea id="modal-mensagem" name="mensagem" class="form-textarea" placeholder="Conte-nos mais sobre sua necessidade..."></textarea>
             </div>
             <div class="form-group">
+              <label class="form-label" for="assunto-usuario">Assunto *</label>
+              <input type="text" id="assunto-usuario" name="assunto" class="form-input" placeholder="Assunto da mensagem">
+              <span class="form-error">Por favor, informe o assunto.</span>
+            </div>
+            <input type="hidden" name="subject" id="assunto-final">
+            <div class="form-group">
+              <div id="recaptcha-widget" class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb"></div>
+            </div>
+            <div class="form-group">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="lgpd-consent" name="lgpd_consent" required>
                 <label class="form-check-label" for="lgpd-consent">
-                  Declaro que li e concordo com a <a href="/pages/politica-de-privacidade.html" target="_blank">Política de Privacidade</a> e com the <a href="/pages/termos-de-uso.html" target="_blank">Termos de Uso</a> da Vizier Contabilidade.
+                  Declaro que li e concordo com a <a href="/pages/politica-de-privacidade.html" target="_blank">Política de Privacidade</a> e com o <a href="/pages/termos-de-uso.html" target="_blank">Termos de Uso</a> da Vizier Contabilidade.
                 </label>
               </div>
+            </div>
+            <div class="form-group">
+              <span class="form-error" id="recaptcha-error" style="display:none;">Por favor, marque que você não é um robô.</span>
             </div>
             <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Enviar Solicitação</button>
             <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--text-light);">
@@ -334,6 +346,16 @@
       if (!overlay) overlay = create();
       overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
+      // Render reCAPTCHA widget if available
+      if (window.grecaptcha && grecaptcha.render) {
+        try {
+          grecaptcha.render('recaptcha-widget', {
+            sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb'
+          });
+        } catch (e) {
+          // widget may already be rendered; ignore
+        }
+      }
       setTimeout(() => {
         const inp = overlay.querySelector('#modal-nome');
         if (inp) inp.focus();
@@ -412,6 +434,7 @@
       const mensagem = getVal('mensagem');
       const cnpj = getVal('cnpj');
       const contadorAtual = getVal('contador_atual');
+      const assunto = getVal('assunto');
 
       let valid = true;
 
@@ -435,25 +458,73 @@
         form.querySelector('[name="servico"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
+      if (!assunto) {
+        form.querySelector('#assunto-usuario')?.closest('.form-group')?.classList.add('error');
+        valid = false;
+      }
+
+      // reCAPTCHA validation
+      let recaptchaResponse = '';
+      try {
+        if (window.grecaptcha && grecaptcha.getResponse) {
+          recaptchaResponse = grecaptcha.getResponse();
+        }
+      } catch (e) {
+        console.error('reCAPTCHA error:', e);
+      }
+      if (!recaptchaResponse) {
+        const recaptchaError = form.querySelector('#recaptcha-error');
+        if (recaptchaError) recaptchaError.style.display = 'block';
+        valid = false;
+      } else {
+        const recaptchaError = form.querySelector('#recaptcha-error');
+        if (recaptchaError) recaptchaError.style.display = 'none';
+      }
 
       if (!valid) {
         e.preventDefault();
-        e.stopPropagation();
         return;
       }
 
-      // If we get here, form is valid.
-      // Set the action to the Static Forms endpoint (not visible in initial HTML)
-      form.action = STATIC_FORMS_ENDPOINT;
+      // Build final subject
+      let finalSubject = '';
+      if (assunto && nome) {
+        finalSubject = `${assunto} - Solicitação de ${nome}`;
+      } else if (!assunto && nome) {
+        finalSubject = `Contato - Solicitação de ${nome}`;
+      } else if (assunto && !nome) {
+        finalSubject = `${assunto} - Solicitação de Cliente`;
+      } else {
+        finalSubject = 'Solicitação de Orçamento';
+      }
+      // Set hidden subject field
+      const subjectInput = form.querySelector('#assunto-final');
+      if (subjectInput) subjectInput.value = finalSubject;
 
-      // Disable the submit button to prevent multiple clicks
-      const submitButton = form.querySelector('button[type="submit"]');
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.innerHTML = 'Enviando...';
+      // Prevent actual form submission (handling client-side for demo)
+      e.preventDefault();
+
+      // Hide the form
+      form.style.display = 'none';
+
+      // Show success message
+      const successDiv = form.parentNode.querySelector('#form-success');
+      if (successDiv) {
+        successDiv.style.display = 'block';
       }
 
-      // We do not preventDefault, so the form will submit naturally.
+      // Optional: reset form after delay
+      setTimeout(() => {
+        form.reset();
+        form.style.display = 'block';
+        successDiv.style.display = 'none';
+        // Re-enable submit button if it was disabled
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerHTML = 'Enviar Solicitação';
+        }
+      }, 5000);
     });
   };
 
