@@ -102,6 +102,25 @@ ul, ol {
   text-align: center !important;
 }
 
+/* Hero specific fixes */
+.hero-content {
+  margin: 0 auto;
+  max-width: 700px;
+  text-align: center;
+}
+.hero-ctas {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
