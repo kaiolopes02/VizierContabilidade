@@ -54,9 +54,10 @@
                         <div style="background:var(--white); border-radius:var(--radius-xl); padding:2.5rem; box-shadow:var(--shadow-lg); border:1px solid var(--neutral);">
                             <h3 style="margin-bottom:0.5rem;">Solicitar transferência</h3>
                             <p style="color:var(--text-secondary); margin-bottom:1.5rem; font-size:0.95rem;">Preencha os dados abaixo e nossa equipe entrará em contato em até 24h.</p>
-                            <form id="form-troca" method="POST">
+                            <form id="form-troca" method="POST" action="https://api.staticforms.dev/submit">
                                 <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
                                 <input type="hidden" name="redirect" value="/pages/obrigado.html">
+                                <div class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb"></div>
                                 <div class="form-honeypot" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
                                 <div class="form-group">
                                     <label class="form-label" for="nome-troca">Nome completo *</label>
@@ -192,6 +193,30 @@
             if (!nome.value.trim() || nome.value.trim().length < 3) { nome.closest('.form-group').classList.add('error'); valid = false; }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) { email.closest('.form-group').classList.add('error'); valid = false; }
             if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(tel.value.trim())) { tel.closest('.form-group').classList.add('error'); valid = false; }
+
+            // reCAPTCHA validation
+            let recaptchaResponse = '';
+            try {
+                if (window.grecaptcha && grecaptcha.getResponse) {
+                    recaptchaResponse = grecaptcha.getResponse();
+                }
+            } catch (e) {
+                console.error('reCAPTCHA error:', e);
+            }
+            if (!recaptchaResponse) {
+                // Add error class to recaptcha container or show alert
+                const recaptchaContainer = form.querySelector('.g-recaptcha');
+                if (recaptchaContainer) {
+                    recaptchaContainer.style.border = '2px solid #dc2626';
+                }
+                alert('Por favor, marque que você não é um robô.');
+                valid = false;
+            } else {
+                const recaptchaContainer = form.querySelector('.g-recaptcha');
+                if (recaptchaContainer) {
+                    recaptchaContainer.style.border = '';
+                }
+            }
 
             if (!valid) return;
 

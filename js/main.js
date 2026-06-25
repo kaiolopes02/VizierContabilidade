@@ -256,7 +256,7 @@
           <button type="button" class="modal-close" aria-label="Fechar modal">&times;</button>
           <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
           <p class="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
-          <form id="form-orcamento" action="javascript:void(0)" method="GET">
+          <form id="form-orcamento" action="https://api.staticforms.dev/submit" method="POST">
             <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
             <input type="hidden" name="redirect" value="/pages/obrigado.html">
             <div class="form-honeypot" aria-hidden="true">
@@ -501,30 +501,8 @@
       const subjectInput = form.querySelector('#assunto-final');
       if (subjectInput) subjectInput.value = finalSubject;
 
-      // Prevent actual form submission (handling client-side for demo)
-      e.preventDefault();
-
-      // Hide the form
-      form.style.display = 'none';
-
-      // Show success message
-      const successDiv = form.parentNode.querySelector('#form-success');
-      if (successDiv) {
-        successDiv.style.display = 'block';
-      }
-
-      // Optional: reset form after delay
-      setTimeout(() => {
-        form.reset();
-        form.style.display = 'block';
-        successDiv.style.display = 'none';
-        // Re-enable submit button if it was disabled
-        const submitButton = form.querySelector('button[type="submit"]');
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.innerHTML = 'Enviar Solicitação';
-        }
-      }, 5000);
+      // Form is valid - let it submit naturally to Static Forms API
+      // The form now has the correct action, method, accessKey, redirect, and subject fields
     });
   };
 
