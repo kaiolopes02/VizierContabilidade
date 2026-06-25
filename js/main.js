@@ -24,7 +24,7 @@
   };
 
   // Static Forms endpoint (split to avoid obvious string)
-  const STATIC_FORMS_ENDPOINT = ['https://', 'api.staticforms.xyz', '/submit'].join('');
+  const STATIC_FORMS_ENDPOINT = ['https://', 'api.staticforms.dev', '/submit'].join('');
 
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
@@ -342,8 +342,11 @@
       return div;
     };
 
-    const open = () => {
+    const open = (title = 'Solicitação de Orçamento') => {
       if (!overlay) overlay = create();
+      // Set the title
+      const titleEl = overlay.querySelector('#modal-title');
+      if (titleEl) titleEl.textContent = title;
       overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
       // Render reCAPTCHA widget if available
@@ -374,7 +377,15 @@
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        open();
+        // Determine custom title based on trigger text
+        let modalTitle = 'Solicitação de Orçamento'; // default
+        const triggerText = trigger.textContent.trim().toLowerCase();
+        if (triggerText.includes('transferência')) {
+          modalTitle = 'Solicitação de Transferência';
+        } else if (triggerText.includes('proposta')) {
+          // keep default or maybe 'Solicitação de Proposta' but we keep default
+        }
+        open(modalTitle);
         return false;
       }
       if (e.target.closest('.modal-close')) {

@@ -14,6 +14,7 @@
     <link rel="icon" type="image/png" href="/assets/images/Vizier.png">
     <link rel="apple-touch-icon" href="/assets/images/Vizier.png">
     <title>Troque de Contador | Vizier Contabilidade</title>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
     <main id="main">
@@ -54,46 +55,7 @@
                         <div style="background:var(--white); border-radius:var(--radius-xl); padding:2.5rem; box-shadow:var(--shadow-lg); border:1px solid var(--neutral);">
                             <h3 style="margin-bottom:0.5rem;">Solicitar transferência</h3>
                             <p style="color:var(--text-secondary); margin-bottom:1.5rem; font-size:0.95rem;">Preencha os dados abaixo e nossa equipe entrará em contato em até 24h.</p>
-                            <form id="form-troca" method="POST" action="https://api.staticforms.dev/submit">
-                                <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
-                                <input type="hidden" name="redirect" value="/pages/obrigado.html">
-                                <div class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb"></div>
-                                <div class="form-honeypot" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
-                                <div class="form-group">
-                                    <label class="form-label" for="nome-troca">Nome completo *</label>
-                                    <input type="text" id="nome-troca" name="nome" class="form-input" required minlength="3" placeholder="Seu nome">
-                                    <span class="form-error">Insira seu nome completo.</span>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="email-troca">E-mail *</label>
-                                    <input type="email" id="email-troca" name="email" class="form-input" required placeholder="seu@email.com">
-                                    <span class="form-error">Insira um e-mail válido.</span>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="whatsapp-troca">WhatsApp *</label>
-                                    <input type="tel" id="whatsapp-troca" name="whatsapp" class="form-input" required placeholder="(11) 98765-4321" maxlength="15">
-                                    <span class="form-error">Insira um WhatsApp válido.</span>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="cnpj-troca">CNPJ da empresa</label>
-                                    <input type="text" id="cnpj-troca" name="cnpj" class="form-input" placeholder="00.000.000/0000-00" maxlength="18">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="contador-atual">Nome do contador atual</label>
-                                    <input type="text" id="contador-atual" name="contador_atual" class="form-input" placeholder="Nome do escritório contábil atual">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="mensagem-troca">Mensagem (opcional)</label>
-                                    <textarea id="mensagem-troca" name="mensagem" class="form-textarea" placeholder="Conte-nos mais sobre sua necessidade..."></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Solicitar transferência</button>
-                                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--text-light);">Ao enviar, você concorda com nossa <a href="/pages/politica-de-privacidade.html" style="color:var(--primary); text-decoration:underline;">Política de Privacidade</a>.</p>
-                            </form>
-                            <div class="form-success" id="form-troca-success" style="display:none;">
-                                <div class="form-success-icon">✓</div>
-                                <h4 style="font-size:1.25rem; margin-bottom:0.5rem;">Solicitação enviada!</h4>
-                                <p style="color:var(--text-secondary);">Nossa equipe analisará seu pedido e entrará em contato em até 24h úteis.</p>
-                            </div>
+                            <button type="button" class="btn btn-primary btn-lg" style="width:100%" data-modal="orcamento">Solicitar transferência</button>
                         </div>
                     </div>
                 </div>
@@ -155,76 +117,5 @@
         </section>
     </main>
     <script src="/js/main.js?v=4" defer></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('form-troca');
-        if (!form) return;
-
-        const whatsapp = document.getElementById('whatsapp-troca');
-        whatsapp?.addEventListener('input', (e) => {
-            let v = e.target.value.replace(/\D/g, '');
-            if (v.length > 11) v = v.slice(0, 11);
-            if (v.length > 7) e.target.value = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
-            else if (v.length > 2) e.target.value = `(${v.slice(0,2)}) ${v.slice(2)}`;
-            else if (v.length > 0) e.target.value = `(${v}`;
-        });
-
-        const cnpj = document.getElementById('cnpj-troca');
-        cnpj?.addEventListener('input', (e) => {
-            let v = e.target.value.replace(/\D/g, '');
-            if (v.length > 14) v = v.slice(0, 14);
-            if (v.length > 12) e.target.value = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8,12)}-${v.slice(12)}`;
-            else if (v.length > 8) e.target.value = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8)}`;
-            else if (v.length > 5) e.target.value = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5)}`;
-            else if (v.length > 2) e.target.value = `${v.slice(0,2)}.${v.slice(2)}`;
-        });
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault(); // Prevent default to handle validation first
-            let valid = true;
-            form.querySelectorAll('.form-group').forEach(g => g.classList.remove('error'));
-
-            const nome = form.querySelector('#nome-troca');
-            const email = form.querySelector('#email-troca');
-            const tel = form.querySelector('#whatsapp-troca');
-            const honeypot = form.querySelector('[name="website"]');
-
-            if (honeypot?.value) return;
-            if (!nome.value.trim() || nome.value.trim().length < 3) { nome.closest('.form-group').classList.add('error'); valid = false; }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) { email.closest('.form-group').classList.add('error'); valid = false; }
-            if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(tel.value.trim())) { tel.closest('.form-group').classList.add('error'); valid = false; }
-
-            // reCAPTCHA validation
-            let recaptchaResponse = '';
-            try {
-                if (window.grecaptcha && grecaptcha.getResponse) {
-                    recaptchaResponse = grecaptcha.getResponse();
-                }
-            } catch (e) {
-                console.error('reCAPTCHA error:', e);
-            }
-            if (!recaptchaResponse) {
-                // Add error class to recaptcha container or show alert
-                const recaptchaContainer = form.querySelector('.g-recaptcha');
-                if (recaptchaContainer) {
-                    recaptchaContainer.style.border = '2px solid #dc2626';
-                }
-                alert('Por favor, marque que você não é um robô.');
-                valid = false;
-            } else {
-                const recaptchaContainer = form.querySelector('.g-recaptcha');
-                if (recaptchaContainer) {
-                    recaptchaContainer.style.border = '';
-                }
-            }
-
-            if (!valid) return;
-
-            // Form is valid, submit naturally to Static Forms API
-            // The form already has the correct action, accessKey, and redirect inputs
-            form.submit();
-        });
-    });
-    </script>
-</body>
+    </body>
 </html>
