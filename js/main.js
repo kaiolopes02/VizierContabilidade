@@ -7,7 +7,7 @@
 
   /* ---------- Config ---------- */
   const CONFIG = {
-    empresa: 'Vizier Contabilidade Empresarial',
+    empresa: 'Vizier Contabilidade',
     nomeCurto: 'Vizier',
     whatsapp: '5511997965024',
     whatsappFmt: '(11) 99796-5024',
@@ -311,7 +311,7 @@
             </div>
             <input type="hidden" name="subject" id="assunto-final">
             <div class="form-group">
-              <div id="recaptcha-widget" class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb"></div>
+              <div id="recaptcha-widget" class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb" data-size="compact"></div>
             </div>
             <div class="form-group">
               <div class="form-check">
@@ -350,7 +350,8 @@
       if (window.grecaptcha && grecaptcha.render) {
         try {
           grecaptcha.render('recaptcha-widget', {
-            sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb'
+            sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
+            size: 'compact'
           });
         } catch (e) {
           // widget may already be rendered; ignore
