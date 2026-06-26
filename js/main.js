@@ -310,6 +310,7 @@
               <span class="form-error">Por favor, informe o assunto.</span>
             </div>
             <input type="hidden" name="subject" id="assunto-final">
+            <input type="hidden" name="g-recaptcha-response">
             <div class="form-group">
               <div id="recaptcha-widget" class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb" data-size="compact"></div>
             </div>
@@ -346,31 +347,20 @@
       if (titleEl) titleEl.textContent = title;
       overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
-      // Render or reset reCAPTCHA widget if available
-      if (window.grecaptcha) {
+      // Clear the reCAPTCHA widget container to avoid "placeholder must be empty" error
+      const recaptchaContainer = overlay.querySelector('#recaptcha-widget');
+      if (recaptchaContainer) {
+        recaptchaContainer.innerHTML = '';
+      }
+      // Render reCAPTCHA widget if available
+      if (window.grecaptcha && typeof grecaptcha.render === 'function') {
         try {
-          // Try to get existing widget ID
-          const widgetId = grecaptcha.getIdRecaptcha ? grecaptcha.getIdRecaptcha('recaptcha-widget') : undefined;
-          if (widgetId !== undefined) {
-            // Reset existing widget
-            grecaptcha.reset(widgetId);
-          } else {
-            // Render new widget
-            grecaptcha.render('recaptcha-widget', {
-              sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
-              size: 'compact'
-            });
-          }
+          grecaptcha.render('recaptcha-widget', {
+            sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
+            size: 'compact'
+          });
         } catch (e) {
-          // Fallback: try to render directly
-          try {
-            grecaptcha.render('recaptcha-widget', {
-              sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
-              size: 'compact'
-            });
-          } catch (e2) {
-            console.error('reCAPTCHA render error:', e2);
-          }
+          console.error('reCAPTCHA render error:', e);
         }
       }
       setTimeout(() => {
@@ -511,10 +501,10 @@
         // Also try to reset recaptcha in case it's in a bad state
         try {
           if (window.grecaptcha) {
-            const widgetId = grecaptcha.getIdRecaptcha ? grecaptcha.getIdRecaptcha('recaptcha-widget') : undefined;
-            if (widgetId !== undefined) {
-              grecaptcha.reset(widgetId);
-            } else {
+            // Clear the container and re-render
+            const recaptchaContainer = form.querySelector('#recaptcha-widget');
+            if (recaptchaContainer) {
+              recaptchaContainer.innerHTML = '';
               grecaptcha.render('recaptcha-widget', {
                 sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
                 size: 'compact'
@@ -529,6 +519,11 @@
         if (recaptchaError) recaptchaError.style.display = 'none';
       }
 
+      if (!valid) {
+        e.preventDefault();
+        return;
+      }
+
       // Disable submit button to prevent double submission
       const submitButton = form.querySelector('button[type="submit"]');
       if (submitButton) {
@@ -537,11 +532,6 @@
         setTimeout(() => {
           submitButton.disabled = false;
         }, 5000); // Re-enable after 5 seconds
-      }
-
-      if (!valid) {
-        e.preventDefault();
-        return;
       }
 
       // Build final subject
