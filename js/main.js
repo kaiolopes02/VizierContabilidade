@@ -346,15 +346,31 @@
       if (titleEl) titleEl.textContent = title;
       overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
-      // Render reCAPTCHA widget if available
-      if (window.grecaptcha && grecaptcha.render) {
+      // Render or reset reCAPTCHA widget if available
+      if (window.grecaptcha) {
         try {
-          grecaptcha.render('recaptcha-widget', {
-            sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
-            size: 'compact'
-          });
+          // Try to get existing widget ID
+          const widgetId = grecaptcha.getIdRecaptcha ? grecaptcha.getIdRecaptcha('recaptcha-widget') : undefined;
+          if (widgetId !== undefined) {
+            // Reset existing widget
+            grecaptcha.reset(widgetId);
+          } else {
+            // Render new widget
+            grecaptcha.render('recaptcha-widget', {
+              sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
+              size: 'compact'
+            });
+          }
         } catch (e) {
-          // widget may already be rendered; ignore
+          // Fallback: try to render directly
+          try {
+            grecaptcha.render('recaptcha-widget', {
+              sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
+              size: 'compact'
+            });
+          } catch (e2) {
+            console.error('reCAPTCHA render error:', e2);
+          }
         }
       }
       setTimeout(() => {
@@ -485,6 +501,23 @@
         const recaptchaError = form.querySelector('#recaptcha-error');
         if (recaptchaError) recaptchaError.style.display = 'block';
         valid = false;
+
+        // Also try to reset recaptcha in case it's in a bad state
+        try {
+          if (window.grecaptcha) {
+            const widgetId = grecaptcha.getIdRecaptcha ? grecaptcha.getIdRecaptcha('recaptcha-widget') : undefined;
+            if (widgetId !== undefined) {
+              grecaptcha.reset(widgetId);
+            } else {
+              grecaptcha.render('recaptcha-widget', {
+                sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
+                size: 'compact'
+              });
+            }
+          }
+        } catch (resetError) {
+          console.error('reCAPTCHA reset error:', resetError);
+        }
       } else {
         const recaptchaError = form.querySelector('#recaptcha-error');
         if (recaptchaError) recaptchaError.style.display = 'none';
