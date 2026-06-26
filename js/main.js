@@ -310,7 +310,6 @@
               <span class="form-error">Por favor, informe o assunto.</span>
             </div>
             <input type="hidden" name="subject" id="assunto-final">
-            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
             <div class="form-group">
               <div id="recaptcha-widget" class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb" data-size="compact"></div>
             </div>
@@ -499,7 +498,7 @@
         console.error('reCAPTCHA error:', e);
       }
 
-      const recaptchaField = form.querySelector('#g-recaptcha-response');
+      const recaptchaField = form.querySelector('[name="g-recaptcha-response"]');
       if (recaptchaField) {
         recaptchaField.value = recaptchaResponse;
       }
