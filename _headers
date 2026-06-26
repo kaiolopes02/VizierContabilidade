@@ -18,7 +18,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
 
   # Permissions policy - disable unused browser features
-  Permissions-Policy: accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), interest-cohort=()
+  Permissions-Policy: accelerometer=(), autoplay=(), camera=(), cross-origin-isolated=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), interest-cohort=()
 
   # HSTS - force HTTPS (6 months, include subdomains, preload)
   Strict-Transport-Security: max-age=15768000; includeSubDomains; preload
@@ -59,3 +59,4 @@
 # Noindex for preview deployments (*.pages.dev)
 https://:project.pages.dev/*
   X-Robots-Tag: noindex, nofollow
+
