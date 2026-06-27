@@ -429,6 +429,7 @@
       const form = e.target;
       if (!form.matches('#form-orcamento, #form-troca')) return;
 
+      // Remove previous errors
       form.querySelectorAll('.form-group').forEach(g => g.classList.remove('error'));
 
       const honeypot = form.querySelector('[name="website"]');
@@ -475,7 +476,7 @@
         form.querySelector('[name="servico"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
-      
+
       // reCAPTCHA validation
       let recaptchaResponse = '';
       try {
@@ -524,33 +525,50 @@
         return;
       }
 
-      // Disable submit button to prevent double submission
-      const submitButton = form.querySelector('button[type="submit"]');
-      if (submitButton) {
-        submitButton.disabled = true;
-        // Re-enable after a short delay to allow user to correct errors if needed
-        setTimeout(() => {
-          submitButton.disabled = false;
-        }, 5000); // Re-enable after 5 seconds
-      }
+      const hasRecaptcha = form.querySelector('#recaptcha-widget') !== null;
+      if (hasRecaptcha) {
+        e.preventDefault();
 
-      // Build final subject
-      let finalSubject = '';
-      if (assunto && nome) {
-        finalSubject = `${assunto} - Solicitação de ${nome}`;
-      } else if (!assunto && nome) {
-        finalSubject = `Contato - Solicitação de ${nome}`;
-      } else if (assunto && !nome) {
-        finalSubject = `${assunto} - Solicitação de Cliente`;
+        // Build FormData
+        const formData = new FormData(form);
+        // Ensure recaptcha response is included (it already is via hidden input, but we ensure)
+        if (recaptchaResponse) {
+          formData.set('g-recaptcha-response', recaptchaResponse);
+        }
+
+        // Button loading state
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+          const originalText = submitButton.textContent.trim();
+          submitButton.textContent = 'Enviando...';
+          submitButton.classList.add('loading');
+        }
+
+        fetch(STATIC_FORMS_ENDPOINT, {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          // Redirect to redirect URL if specified, else default
+          const redirectInput = form.querySelector('input[name="redirect"]');
+          const redirectUrl = redirectInput ? redirectInput.value : '/pages/obrigado.html';
+          window.location.href = redirectUrl;
+        })
+        .catch(error => {
+          console.error('Form submission error:', error);
+          alert('Erro ao enviar. Tente novamente.');
+          // Reset button
+          const submitButton = form.querySelector('button[type="submit"]');
+          if (submitButton) {
+            submitButton.textContent = 'Enviar Solicitação';
+            submitButton.classList.remove('loading');
+          }
+        });
       } else {
-        finalSubject = 'Solicitação de Orçamento';
+        // No reCAPTCHA, let form submit naturally
+        return;
       }
-      // Set hidden subject field
-      const subjectInput = form.querySelector('#assunto-final');
-      if (subjectInput) subjectInput.value = finalSubject;
-
-      // Form is valid - let it submit naturally to Static Forms API
-      // The form now has the correct action, method, accessKey, redirect, and subject fields
     });
   };
 
