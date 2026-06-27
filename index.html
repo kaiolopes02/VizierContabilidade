@@ -39,7 +39,8 @@
     <link rel="stylesheet" href="/css/main.css?v=4">
 
     <!-- reCAPTCHA v2 -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script>window.onRecaptchaLoad = function() { window.recaptchaReady = true; };</script>
+    <script src="https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad" async defer></script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/images/Vizier.png">

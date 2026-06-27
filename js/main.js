@@ -255,7 +255,7 @@
           <p class="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
           <form id="form-orcamento" action="https://api.staticforms.dev/submit" method="POST">
             <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
-            <input type="hidden" name="redirect" value="/pages/obrigado.html">
+            <input type="hidden" name="redirect" value="https://viziercontabilidade.com.br/pages/obrigado.html">
             <div class="form-honeypot" aria-hidden="true">
               <input type="text" name="website" tabindex="-1" autocomplete="off">
             </div>
@@ -312,7 +312,7 @@
             <input type="hidden" name="subject" id="assunto-final">
             <input type="hidden" name="g-recaptcha-response">
             <div class="form-group">
-              <div id="recaptcha-widget" class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb" data-size="compact"></div>
+              <div id="recaptcha-widget" class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb" data-size="compact" data-expired-callback="recaptchaExpired"></div>
             </div>
             <div class="form-group">
               <div class="form-check">
@@ -353,15 +353,17 @@
         recaptchaContainer.innerHTML = '';
       }
       // Render reCAPTCHA widget if available
-      if (window.grecaptcha && typeof grecaptcha.render === 'function') {
-        try {
-          grecaptcha.render('recaptcha-widget', {
-            sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
-            size: 'compact'
-          });
-        } catch (e) {
-          console.error('reCAPTCHA render error:', e);
-        }
+      if (window.recaptchaReady && window.grecaptcha && typeof grecaptcha.render === 'function') {
+        setTimeout(() => {
+          try {
+            window.recaptchaWidgetId = grecaptcha.render('recaptcha-widget', {
+              sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
+              size: 'compact'
+            });
+          } catch (e) {
+            console.error('reCAPTCHA render error:', e);
+          }
+        }, 400);
       }
       setTimeout(() => {
         const inp = overlay.querySelector('#modal-nome');
@@ -473,11 +475,7 @@
         form.querySelector('[name="servico"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
-      if (!assunto) {
-        form.querySelector('#assunto-usuario')?.closest('.form-group')?.classList.add('error');
-        valid = false;
-      }
-
+      
       // reCAPTCHA validation
       let recaptchaResponse = '';
       try {
@@ -500,12 +498,14 @@
 
         // Also try to reset recaptcha in case it's in a bad state
         try {
-          if (window.grecaptcha) {
+          if (window.grecaptcha && typeof window.recaptchaWidgetId !== 'undefined') {
+            grecaptcha.reset(window.recaptchaWidgetId);
+          } else if (window.grecaptcha) {
             // Clear the container and re-render
             const recaptchaContainer = form.querySelector('#recaptcha-widget');
             if (recaptchaContainer) {
               recaptchaContainer.innerHTML = '';
-              grecaptcha.render('recaptcha-widget', {
+              window.recaptchaWidgetId = grecaptcha.render('recaptcha-widget', {
                 sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
                 size: 'compact'
               });
@@ -656,3 +656,12 @@
     initAll();
   }
 })();
+
+window.recaptchaExpired = function() {
+  const err = document.getElementById('recaptcha-error');
+  if (err) err.style.display = 'block';
+  try {
+    if (window.recaptchaWidgetId !== undefined)
+      grecaptcha.reset(window.recaptchaWidgetId);
+  } catch(e) {}
+};
