@@ -20,8 +20,8 @@
     utm: '&utm_source=site&utm_medium=cta&utm_campaign=orcamento'
   };
 
-  // Static Forms endpoint
-  const STATIC_FORMS_ENDPOINT = ['https://', 'api.staticforms.dev', '/submit'].join('');
+  // Static Forms endpoint corrigido para .xyz
+  const STATIC_FORMS_ENDPOINT = ['https://', 'api.staticforms.xyz', '/submit'].join('');
 
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
@@ -253,9 +253,9 @@
           <button type="button" class="modal-close" aria-label="Fechar modal">&times;</button>
           <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
           <p class="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
-          <form id="form-orcamento" action="https://api.staticforms.dev/submit" method="POST">
+          <form id="form-orcamento" action="https://api.staticforms.xyz/submit" method="POST">
             <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
-            <input type="hidden" name="redirect" value="https://viziercontabilidade.com.br/pages/obrigado.html">
+            <input type="hidden" name="redirect" value="https://www.viziercontabilidade.com.br">
             <div class="form-honeypot" aria-hidden="true">
               <input type="text" name="website" tabindex="-1" autocomplete="off">
             </div>
@@ -337,6 +337,8 @@
         </div>
       `;
       document.body.appendChild(div);
+      // Initialize recaptcha tracking property
+      div.recaptchaWidgetId = undefined;
       return div;
     };
 
@@ -356,10 +358,12 @@
       if (window.recaptchaReady && window.grecaptcha && typeof grecaptcha.render === 'function') {
         setTimeout(() => {
           try {
-            window.recaptchaWidgetId = grecaptcha.render('recaptcha-widget', {
+            const widgetId = grecaptcha.render('recaptcha-widget', {
               sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
               size: 'compact'
             });
+            // Store widget ID on the overlay element
+            overlay.recaptchaWidgetId = widgetId;
           } catch (e) {
             console.error('reCAPTCHA render error:', e);
           }
@@ -373,6 +377,21 @@
 
     const close = () => {
       if (!overlay) return;
+      // Reset reCAPTCHA if widget was rendered
+      if (overlay.recaptchaWidgetId !== undefined) {
+        try {
+          grecaptcha.reset(overlay.recaptchaWidgetId);
+        } catch (e) {
+          console.error('reCAPTCHA reset error on close:', e);
+        }
+        overlay.recaptchaWidgetId = undefined;
+      }
+      
+      const form = overlay.querySelector('form');
+      const formSuccess = overlay.querySelector('#form-success');
+      if (form) form.style.display = 'block';
+      if (formSuccess) formSuccess.style.display = 'none';
+
       overlay.classList.remove('active');
       document.body.style.overflow = '';
     };
@@ -449,10 +468,6 @@
       const whatsapp = getVal('whatsapp');
       const tipoEmpresa = getVal('tipo_empresa');
       const servico = getVal('servico');
-      const mensagem = getVal('mensagem');
-      const cnpj = getVal('cnpj');
-      const contadorAtual = getVal('contador_atual');
-      const assunto = getVal('assunto');
 
       let valid = true;
 
@@ -477,14 +492,19 @@
         valid = false;
       }
 
-      // reCAPTCHA validation
+      // reCAPTCHA validation - ONLY required if widget was successfully rendered
       let recaptchaResponse = '';
-      try {
-        if (window.grecaptcha && grecaptcha.getResponse) {
-          recaptchaResponse = grecaptcha.getResponse();
+      let recaptchaRequired = false;
+      const overlay = form.closest('.modal-overlay');
+      if (overlay && overlay.recaptchaWidgetId !== undefined) {
+        recaptchaRequired = true;
+        try {
+          if (window.grecaptcha && grecaptcha.getResponse) {
+            recaptchaResponse = grecaptcha.getResponse();
+          }
+        } catch (e) {
+          console.error('reCAPTCHA error:', e);
         }
-      } catch (e) {
-        console.error('reCAPTCHA error:', e);
       }
 
       const recaptchaField = form.querySelector('[name="g-recaptcha-response"]');
@@ -492,15 +512,15 @@
         recaptchaField.value = recaptchaResponse;
       }
 
-      if (!recaptchaResponse) {
+      if (recaptchaRequired && !recaptchaResponse) {
         const recaptchaError = form.querySelector('#recaptcha-error');
         if (recaptchaError) recaptchaError.style.display = 'block';
         valid = false;
 
         // Also try to reset recaptcha in case it's in a bad state
         try {
-          if (window.grecaptcha && typeof window.recaptchaWidgetId !== 'undefined') {
-            grecaptcha.reset(window.recaptchaWidgetId);
+          if (overlay && overlay.recaptchaWidgetId !== undefined) {
+            grecaptcha.reset(overlay.recaptchaWidgetId);
           } else if (window.grecaptcha) {
             // Clear the container and re-render
             const recaptchaContainer = form.querySelector('#recaptcha-widget');
@@ -525,50 +545,52 @@
         return;
       }
 
-      const hasRecaptcha = form.querySelector('#recaptcha-widget') !== null;
-      if (hasRecaptcha) {
-        e.preventDefault();
+      // Always prevent default submission and use AJAX
+      e.preventDefault();
 
-        // Build FormData
-        const formData = new FormData(form);
-        // Ensure recaptcha response is included (it already is via hidden input, but we ensure)
-        if (recaptchaResponse) {
-          formData.set('g-recaptcha-response', recaptchaResponse);
-        }
+      // Build FormData
+      const formData = new FormData(form);
+      // Ensure recaptcha response is included (it already is via hidden input, but we ensure)
+      if (recaptchaResponse) {
+        formData.set('g-recaptcha-response', recaptchaResponse);
+      }
 
-        // Button loading state
-        const submitButton = form.querySelector('button[type="submit"]');
-        if (submitButton) {
-          const originalText = submitButton.textContent.trim();
-          submitButton.textContent = 'Enviando...';
-          submitButton.classList.add('loading');
-        }
+      // Button loading state
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.textContent = 'Enviando...';
+        submitButton.classList.add('loading');
+      }
 
-        fetch(STATIC_FORMS_ENDPOINT, {
-          method: 'POST',
-          body: formData
-        })
-        .then(response => {
-          if (!response.ok) throw new Error('Network response was not ok');
-          // Redirect to redirect URL if specified, else default
-          const redirectInput = form.querySelector('input[name="redirect"]');
-          const redirectUrl = redirectInput ? redirectInput.value : '/pages/obrigado.html';
-          window.location.href = redirectUrl;
-        })
-        .catch(error => {
-          console.error('Form submission error:', error);
-          alert('Erro ao enviar. Tente novamente.');
-          // Reset button
-          const submitButton = form.querySelector('button[type="submit"]');
+      fetch(STATIC_FORMS_ENDPOINT, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        // Show success state instead of redirecting
+        const modalContent = form.closest('.modal');
+        const formSuccess = modalContent ? modalContent.querySelector('#form-success') : null;
+        
+        if (formSuccess) {
+          formSuccess.style.display = 'block';
+          form.style.display = 'none'; // Hide the form safely
+          
           if (submitButton) {
             submitButton.textContent = 'Enviar Solicitação';
             submitButton.classList.remove('loading');
           }
-        });
-      } else {
-        // No reCAPTCHA, let form submit naturally
-        return;
-      }
+        } else {
+          // Fallback UI
+          HTMLFormElement.prototype.submit.call(form);
+        }
+      })
+      .catch(error => {
+        console.error('Form submission error:', error);
+        // Fallback: se fetch() falhar, form.submit() para envio real (Static Forms redireciona pra home configurada)
+        HTMLFormElement.prototype.submit.call(form);
+      });
     });
   };
 
