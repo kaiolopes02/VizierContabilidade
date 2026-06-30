@@ -255,7 +255,6 @@
           <p class="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
           <form id="form-orcamento" action="https://api.staticforms.xyz/submit" method="POST">
             <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
-            <input type="hidden" name="redirect" value="https://www.viziercontabilidade.com.br">
             <div class="form-honeypot" aria-hidden="true">
               <input type="text" name="website" tabindex="-1" autocomplete="off">
             </div>

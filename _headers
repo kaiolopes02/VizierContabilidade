@@ -23,9 +23,9 @@
   # HSTS - force HTTPS (6 months, include subdomains, preload)
   Strict-Transport-Security: max-age=15768000; includeSubDomains; preload
 
-  # Content Security Policy - tuned for Vizier stack
-  # Google Fonts (CSS + Fonts), inline styles (necessary for current architecture), WhatsApp API, reCAPTCHA
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; frame-src https://www.google.com; base-uri 'self'; form-action 'self' https://api.whatsapp.com https://api.staticforms.dev; upgrade-insecure-requests
+ # Content Security Policy - tuned for Vizier stack
+ # Google Fonts (CSS + Fonts), inline styles (necessary for current architecture), WhatsApp API, reCAPTCHA
+ Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.staticforms.xyz https://api.staticforms.dev; frame-ancestors 'none'; frame-src https://www.google.com; base-uri 'self'; form-action 'self' https://api.whatsapp.com https://api.staticforms.xyz https://api.staticforms.dev; upgrade-insecure-requests
 
 # Cache control for static assets (CSS, JS with hash/fingerprint)
 /assets/*
@@ -59,4 +59,5 @@
 # Noindex for preview deployments (*.pages.dev)
 https://:project.pages.dev/*
   X-Robots-Tag: noindex, nofollow
+
 
