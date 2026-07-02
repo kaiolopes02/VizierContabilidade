@@ -20,8 +20,9 @@
     utm: '&utm_source=site&utm_medium=cta&utm_campaign=orcamento'
   };
 
-  // Static Forms endpoint corrigido para .xyz
-  const STATIC_FORMS_ENDPOINT = ['https://', 'api.staticforms.xyz', '/submit'].join('');
+  // Static Forms endpoints - Primary: /api/submit (Cloudflare Worker), Fallback: Formspree
+  const STATIC_FORMS_ENDPOINT = '/api/submit';
+  const STATIC_FORMS_FALLBACK = 'https://formspree.io/f/xqkrqkqz';
 
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
@@ -341,11 +342,37 @@
       return div;
     };
 
-    const open = (title = 'Solicitação de Orçamento') => {
+    const open = (title = 'Solicitação de Orçamento', isTroca = false) => {
       if (!overlay) overlay = create();
       // Set the title
       const titleEl = overlay.querySelector('#modal-title');
       if (titleEl) titleEl.textContent = title;
+      
+      // Inject extra fields for "Troca de Contador" (Bug #5)
+      const form = overlay.querySelector('form');
+      const servicoGroup = form.querySelector('[name="servico"]').closest('.form-group');
+      const existingTrocaFields = form.querySelector('.troca-extra-fields');
+      
+      if (isTroca && !existingTrocaFields) {
+        const extraFields = document.createElement('div');
+        extraFields.className = 'troca-extra-fields';
+        extraFields.innerHTML = `
+          <div class="form-group">
+            <label class="form-label" for="modal-cnpj">CNPJ da empresa *</label>
+            <input type="text" id="modal-cnpj" name="cnpj" class="form-input" required placeholder="00.000.000/0000-00" maxlength="18">
+            <span class="form-error">Por favor, insira o CNPJ válido.</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="modal-contador-atual">Contador atual *</label>
+            <input type="text" id="modal-contador-atual" name="contador_atual" class="form-input" required placeholder="Nome do escritório ou contador">
+            <span class="form-error">Por favor, informe o contador atual.</span>
+          </div>
+        `;
+        servicoGroup.insertAdjacentElement('afterend', extraFields);
+      } else if (!isTroca && existingTrocaFields) {
+        existingTrocaFields.remove();
+      }
+      
       overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
       // Clear the reCAPTCHA widget container to avoid "placeholder must be empty" error
@@ -384,9 +411,13 @@
           console.error('reCAPTCHA reset error on close:', e);
         }
         overlay.recaptchaWidgetId = undefined;
-      }
-      
+}
+       
       const form = overlay.querySelector('form');
+      // Remove extra fields for "Troca de Contador" on close
+      const extraFields = form.querySelector('.troca-extra-fields');
+      if (extraFields) extraFields.remove();
+      
       const formSuccess = overlay.querySelector('#form-success');
       if (form) form.style.display = 'block';
       if (formSuccess) formSuccess.style.display = 'none';
@@ -401,15 +432,19 @@
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        // Determine custom title based on trigger text
+        // Determine custom title and type based on trigger text
         let modalTitle = 'Solicitação de Orçamento'; // default
+        let isTroca = false;
         const triggerText = trigger.textContent.trim().toLowerCase();
         if (triggerText.includes('transferência')) {
           modalTitle = 'Solicitação de Transferência';
+          isTroca = true;
+        } else if (triggerText.includes('troca')) {
+          isTroca = true;
         } else if (triggerText.includes('proposta')) {
-          // keep default or maybe 'Solicitação de Proposta' but we keep default
+          // keep default
         }
-        open(modalTitle);
+        open(modalTitle, isTroca);
         return false;
       }
       if (e.target.closest('.modal-close')) {
@@ -478,7 +513,9 @@
         form.querySelector('[name="email"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
-      if (!/^\(\d{2}\) \d{4,5}-\d{4}$/.test(whatsapp)) {
+      // WhatsApp validation: accept both (XX) XXXX-XXXX (8 digits) and (XX) XXXXX-XXXX (9 digits)
+      const phoneDigits = whatsapp.replace(/\D/g, '');
+      if (phoneDigits.length < 10 || phoneDigits.length > 11 || !/^\(\d{2}\) \d{4,5}-\d{4}$/.test(whatsapp)) {
         form.querySelector('[name="whatsapp"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
@@ -490,11 +527,17 @@
         form.querySelector('[name="servico"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
+      // LGPD consent validation (required checkbox)
+      const lgpdConsent = form.querySelector('[name="lgpd_consent"]')?.checked || false;
+      if (!lgpdConsent) {
+        form.querySelector('[name="lgpd_consent"]')?.closest('.form-group')?.classList.add('error');
+        valid = false;
+      }
 
       // reCAPTCHA validation - ONLY required if widget was successfully rendered
       let recaptchaResponse = '';
       let recaptchaRequired = false;
-      const overlay = form.closest('.modal-overlay');
+      const overlay = document.querySelector('.modal-overlay.active');
       if (overlay && overlay.recaptchaWidgetId !== undefined) {
         recaptchaRequired = true;
         try {
@@ -518,8 +561,9 @@
 
         // Also try to reset recaptcha in case it's in a bad state
         try {
-          if (overlay && overlay.recaptchaWidgetId !== undefined) {
-            grecaptcha.reset(overlay.recaptchaWidgetId);
+          const activeOverlay = document.querySelector('.modal-overlay.active');
+          if (activeOverlay && activeOverlay.recaptchaWidgetId !== undefined) {
+            grecaptcha.reset(activeOverlay.recaptchaWidgetId);
           } else if (window.grecaptcha) {
             // Clear the container and re-render
             const recaptchaContainer = form.querySelector('#recaptcha-widget');
@@ -561,35 +605,35 @@
         submitButton.classList.add('loading');
       }
 
-      fetch(STATIC_FORMS_ENDPOINT, {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        // Show success state instead of redirecting
-        const modalContent = form.closest('.modal');
-        const formSuccess = modalContent ? modalContent.querySelector('#form-success') : null;
-        
-        if (formSuccess) {
-          formSuccess.style.display = 'block';
-          form.style.display = 'none'; // Hide the form safely
+      // Remove honeypot from FormData before submitting (Bug #4)
+      formData.delete('website');
+
+      const submitWithFallback = (url) => fetch(url, { method: 'POST', body: formData })
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
           
-          if (submitButton) {
-            submitButton.textContent = 'Enviar Solicitação';
-            submitButton.classList.remove('loading');
+          const modalContent = form.closest('.modal');
+          const formSuccess = modalContent ? modalContent.querySelector('#form-success') : null;
+          
+          if (formSuccess) {
+            formSuccess.style.display = 'block';
+            form.style.display = 'none';
+            
+            if (submitButton) {
+              submitButton.textContent = 'Enviar Solicitação';
+              submitButton.classList.remove('loading');
+            }
+          } else {
+            HTMLFormElement.prototype.submit.call(form);
           }
-        } else {
-          // Fallback UI
+        });
+
+      submitWithFallback(STATIC_FORMS_ENDPOINT)
+        .catch(() => submitWithFallback(STATIC_FORMS_FALLBACK))
+        .catch(error => {
+          console.error('Form submission error:', error);
           HTMLFormElement.prototype.submit.call(form);
-        }
-      })
-      .catch(error => {
-        console.error('Form submission error:', error);
-        // Fallback: se fetch() falhar, form.submit() para envio real (Static Forms redireciona pra home configurada)
-        HTMLFormElement.prototype.submit.call(form);
-      });
+        });
     });
   };
 
@@ -700,7 +744,8 @@ window.recaptchaExpired = function() {
   const err = document.getElementById('recaptcha-error');
   if (err) err.style.display = 'block';
   try {
-    if (window.recaptchaWidgetId !== undefined)
-      grecaptcha.reset(window.recaptchaWidgetId);
+    const overlay = document.querySelector('.modal-overlay.active');
+    if (overlay && overlay.recaptchaWidgetId !== undefined)
+      grecaptcha.reset(overlay.recaptchaWidgetId);
   } catch(e) {}
 };

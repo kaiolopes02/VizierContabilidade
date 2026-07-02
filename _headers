@@ -1,63 +1,7 @@
-# ============================================
-# VIZIER - SECURITY HEADERS
-# Cloudflare Pages _headers file
-# ============================================
-
-# Global security headers for all routes
 /*
-  # Prevent clickjacking
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://formspree.io https://api.formspree.io; frame-ancestors 'none'; frame-src https://www.google.com; base-uri 'self'; form-action 'self' https://api.whatsapp.com https://formspree.io; upgrade-insecure-requests
   X-Frame-Options: DENY
-
-  # Prevent MIME sniffing
   X-Content-Type-Options: nosniff
-
-  # Disable XSS auditor (deprecated, CSP replaces it)
-  X-XSS-Protection: 0
-
-  # Referrer policy - minimal info leakage
   Referrer-Policy: strict-origin-when-cross-origin
-
-  # Permissions policy - disable unused browser features
-  Permissions-Policy: accelerometer=(), autoplay=(), camera=(), cross-origin-isolated=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), interest-cohort=()
-
-  # HSTS - force HTTPS (6 months, include subdomains, preload)
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()
   Strict-Transport-Security: max-age=15768000; includeSubDomains; preload
-
- # Content Security Policy - tuned for Vizier stack
- # Google Fonts (CSS + Fonts), inline styles (necessary for current architecture), WhatsApp API, reCAPTCHA
- Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.staticforms.xyz https://api.staticforms.dev; frame-ancestors 'none'; frame-src https://www.google.com; base-uri 'self'; form-action 'self' https://api.whatsapp.com https://api.staticforms.xyz https://api.staticforms.dev; upgrade-insecure-requests
-
-# Cache control for static assets (CSS, JS with hash/fingerprint)
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.css
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.js
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.svg
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.png
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.jpg
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.webp
-  Cache-Control: public, max-age=31536000, immutable
-
-# HTML pages - no cache (always fresh)
-/*.html
-  Cache-Control: public, max-age=0, must-revalidate
-
-/
-  Cache-Control: public, max-age=0, must-revalidate
-
-# Noindex for preview deployments (*.pages.dev)
-https://:project.pages.dev/*
-  X-Robots-Tag: noindex, nofollow
-
-
