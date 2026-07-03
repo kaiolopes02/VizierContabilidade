@@ -254,7 +254,20 @@
           <button type="button" class="modal-close" aria-label="Fechar modal">&times;</button>
           <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
           <p class="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
-          <form id="form-orcamento" action="https://api.staticforms.xyz/submit" method="POST">
+          <!-- FIX MOBILE: action aponta para o Worker (same-origin, liberado pelo CSP).
+               Antes apontava para api.staticforms.xyz, ausente da diretiva form-action do
+               CSP: em mobile, se o submit nativo disparasse antes do JS, era bloqueado
+               silenciosamente. Agora qualquer fallback nativo tambem e same-origin. -->
+          <!-- FIX MOBILE (2026-07-02): Race-condition entre script defer + conexao lenta.
+                Em 3G/4G o download do main.js pode demorar 5-8s. O usuario clica no botao
+                "Solicitar Orcamento" enquanto o JS ainda carrega — o listener click (data-modal)
+                nao esta registrado ainda, entao o modal NAO abre. O usuario nao ve nada acontecer.
+                Solucao: script inline sincrono ANTES do defer script (ver index.html).
+                Alem disso, blindamos o form inline com onsubmit="return false" para que
+                MESMO se Rocket Loader / defer atrasarem a execucao do JS, o submit nativo
+                nunca dispare um POST que navegaria para uma pagina JSON pura (falha silenciosa).
+                O handler JS depois chama explicitamente o fetch. -->
+           <form id="form-orcamento" action="/api/submit" method="POST" onsubmit="return false">
             <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
             <div class="form-honeypot" aria-hidden="true">
               <input type="text" name="website" tabindex="-1" autocomplete="off">
@@ -309,7 +322,6 @@
               <input type="text" id="assunto-usuario" name="assunto" class="form-input" placeholder="Assunto da mensagem">
               <span class="form-error">Por favor, informe o assunto.</span>
             </div>
-            <input type="hidden" name="subject" id="assunto-final">
             <input type="hidden" name="g-recaptcha-response">
             <div class="form-group">
               <div id="recaptcha-widget" class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb" data-size="compact" data-expired-callback="recaptchaExpired"></div>
@@ -418,8 +430,11 @@
       const extraFields = form.querySelector('.troca-extra-fields');
       if (extraFields) extraFields.remove();
       
+      if (form) {
+        form.reset();
+        form.style.display = 'block';
+      }
       const formSuccess = overlay.querySelector('#form-success');
-      if (form) form.style.display = 'block';
       if (formSuccess) formSuccess.style.display = 'none';
 
       overlay.classList.remove('active');
@@ -482,6 +497,14 @@
       const form = e.target;
       if (!form.matches('#form-orcamento, #form-troca')) return;
 
+      // FIX MOBILE: preventDefault() sincrono e imediato. Em mobile (CPUs lentas +
+      // script com defer), o submit nativo pode competir com o fetch assincrono e
+      // disparar um POST bloqueado pelo CSP (falha silenciosa sem erro visivel).
+      // Bloquear aqui garante que apenas o caminho AJAX (fetch) rode em qualquer
+      // dispositivo. As chamadas preventDefault() mais abaixo tornam-se redundantes
+      // (mantidas intencionalmente para nao reescrever a logica de validacao).
+      e.preventDefault();
+
       // Remove previous errors
       form.querySelectorAll('.form-group').forEach(g => g.classList.remove('error'));
 
@@ -502,6 +525,7 @@
       const whatsapp = getVal('whatsapp');
       const tipoEmpresa = getVal('tipo_empresa');
       const servico = getVal('servico');
+      const assunto = getVal('assunto');
 
       let valid = true;
 
@@ -513,9 +537,9 @@
         form.querySelector('[name="email"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
-      // WhatsApp validation: accept both (XX) XXXX-XXXX (8 digits) and (XX) XXXXX-XXXX (9 digits)
+      // WhatsApp validation: accept 10 digits (landline) or 11 digits (mobile)
       const phoneDigits = whatsapp.replace(/\D/g, '');
-      if (phoneDigits.length < 10 || phoneDigits.length > 11 || !/^\(\d{2}\) \d{4,5}-\d{4}$/.test(whatsapp)) {
+      if ((phoneDigits.length !== 10 && phoneDigits.length !== 11) || !/^\(\d{2}\) \d{4,5}-\d{4}$/.test(whatsapp)) {
         form.querySelector('[name="whatsapp"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
@@ -527,6 +551,10 @@
         form.querySelector('[name="servico"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
+      if (form.querySelector('[name="assunto"]') && !assunto) {
+        form.querySelector('[name="assunto"]')?.closest('.form-group')?.classList.add('error');
+        valid = false;
+      }
       // LGPD consent validation (required checkbox)
       const lgpdConsent = form.querySelector('[name="lgpd_consent"]')?.checked || false;
       if (!lgpdConsent) {
@@ -534,12 +562,12 @@
         valid = false;
       }
 
-      // reCAPTCHA validation - ONLY required if widget was successfully rendered
+      // reCAPTCHA validation — always required; block if unavailable
       let recaptchaResponse = '';
-      let recaptchaRequired = false;
+      let recaptchaAvailable = false;
       const overlay = document.querySelector('.modal-overlay.active');
       if (overlay && overlay.recaptchaWidgetId !== undefined) {
-        recaptchaRequired = true;
+        recaptchaAvailable = true;
         try {
           if (window.grecaptcha && grecaptcha.getResponse) {
             recaptchaResponse = grecaptcha.getResponse();
@@ -549,12 +577,27 @@
         }
       }
 
+      if (!recaptchaAvailable || !window.grecaptcha) {
+        const recaptchaError = form.querySelector('#recaptcha-error');
+        if (recaptchaError) {
+          recaptchaError.textContent = 'Proteção anti-spam indisponível. Recarregue a página e tente novamente.';
+          recaptchaError.style.display = 'block';
+        }
+        valid = false;
+        e.preventDefault();
+        if (submitButton) {
+          submitButton.textContent = 'Enviar Solicitação';
+          submitButton.classList.remove('loading');
+        }
+        return;
+      }
+
       const recaptchaField = form.querySelector('[name="g-recaptcha-response"]');
       if (recaptchaField) {
         recaptchaField.value = recaptchaResponse;
       }
 
-      if (recaptchaRequired && !recaptchaResponse) {
+      if (!recaptchaResponse) {
         const recaptchaError = form.querySelector('#recaptcha-error');
         if (recaptchaError) recaptchaError.style.display = 'block';
         valid = false;
@@ -608,33 +651,110 @@
       // Remove honeypot from FormData before submitting (Bug #4)
       formData.delete('website');
 
-      const submitWithFallback = (url) => fetch(url, { method: 'POST', body: formData })
+      // FIX MOBILE/COMPAT: o front nomeia o telefone como "whatsapp", mas o Worker
+      // (functions/api/submit.js) valida o campo "telefone". Sem este mapeamento o
+      // Worker retornava 400 ("Campo obrigatorio: telefone") em 100% dos envios,
+      // forcando o fallback no frontend e aumentando a chance de falha em rede lenta.
+      if (!formData.get('telefone') && formData.get('whatsapp')) {
+        formData.append('telefone', formData.get('whatsapp'));
+      }
+
+      // FIX MOBILE: helper para limpar/ exibir erros de envio visiveis ao usuario.
+      // Sem isso, falhas de rede no mobile (timeout/abort) eram silenciosas — nenhum
+      // feedback, nenhum console.error visivel ao usuario, e-mail nao chegava.
+      const clearSubmitError = () => {
+        const errEl = form.querySelector('#form-submit-error');
+        if (errEl) errEl.style.display = 'none';
+      };
+      const showSubmitError = (message) => {
+        let errEl = form.querySelector('#form-submit-error');
+        if (!errEl) {
+          errEl = document.createElement('div');
+          errEl.id = 'form-submit-error';
+          errEl.setAttribute('role', 'alert');
+          errEl.style.cssText = 'display:block;text-align:center;margin-top:1rem;padding:0.75rem;border-radius:var(--radius);background:#fef2f2;color:#ef4444;font-size:0.875rem;font-weight:500;';
+          submitButton.parentNode.insertBefore(errEl, submitButton.nextSibling);
+        }
+        errEl.textContent = message;
+        errEl.style.display = 'block';
+      };
+      clearSubmitError();
+
+// FIX MOBILE: timeout de 25s via AbortController. Em 3G/4G a latencia pode
+      // chegar a 2-3s por RTT, e o Worker faz um segundo fetch (Worker->Formspree)
+      // adicionando mais latencia. 25s cobre o pior caso sem ser infinito.
+      // DEBUG: se timeout ainda ocorrer em testes mobile, aumente este valor.
+      const fetchWithTimeout = (url, options, ms = 25000) => {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), ms);
+        // DEBUG: console.log('[Vizier] Enviando para:', url);
+        return fetch(url, Object.assign({}, options, { signal: controller.signal }))
+          .then(res => { clearTimeout(id); /* DEBUG: console.log('[Vizier] Resposta status:', res.status); */ return res; })
+          .catch(err => { clearTimeout(id); throw err; });
+      };
+
+// DEBUG: console.log('[Vizier] Iniciando envio do formulario para:', STATIC_FORMS_ENDPOINT);
+      const submitWithFallback = (url) => fetchWithTimeout(url, { method: 'POST', body: formData })
         .then(response => {
-          if (!response.ok) throw new Error('Network response was not ok');
-          
+          if (!response.ok) {
+            // DEBUG: console.log('[Vizier] Resposta nao-ok do endpoint:', url, 'status:', response.status);
+            throw new Error('Network response was not ok: ' + response.status);
+          }
+
+          // DEBUG: console.log('[Vizier] Envio bem-sucedido via:', url);
+
           const modalContent = form.closest('.modal');
           const formSuccess = modalContent ? modalContent.querySelector('#form-success') : null;
-          
+
           if (formSuccess) {
             formSuccess.style.display = 'block';
             form.style.display = 'none';
-            
+
             if (submitButton) {
               submitButton.textContent = 'Enviar Solicitação';
               submitButton.classList.remove('loading');
             }
           } else {
-            HTMLFormElement.prototype.submit.call(form);
+            // FIX MOBILE: se #form-success nao existir (DOM corrompido em mobile?), NAO
+            // chama submit nativo (causaria navegacao para JSON puro). Exibe erro visivel.
+            console.error('[Vizier] Elemento #form-success nao encontrado no DOM do modal.');
+            showSubmitError('Erro interno ao exibir confirmacao. Tente novamente.');
           }
         });
 
+// DEBUG: console.log('[Vizier] Tentando endpoint primario:', STATIC_FORMS_ENDPOINT);
       submitWithFallback(STATIC_FORMS_ENDPOINT)
-        .catch(() => submitWithFallback(STATIC_FORMS_FALLBACK))
-        .catch(error => {
-          console.error('Form submission error:', error);
-          HTMLFormElement.prototype.submit.call(form);
+        .catch((err1) => {
+          // DEBUG: console.log('[Vizier] Endpoint primario falhou:', err1, 'tentando fallback:', STATIC_FORMS_FALLBACK);
+          return submitWithFallback(STATIC_FORMS_FALLBACK);
+        })
+        .catch((error) => {
+          // FIX MOBILE (2026-07-02): Falha total — exibe erro visivel ao usuario.
+          // Antes (versao anterior) chamava HTMLFormElement.prototype.submit.call(form),
+          // que disparava POST nativo bloqueado pela diretiva form-action do CSP ou
+          // navegava para pagina JSON pura (falha 100% silenciosa no mobile).
+          console.error('[Vizier] Falha total no envio:', error);
+          if (submitButton) {
+            submitButton.textContent = 'Enviar Solicitação';
+            submitButton.classList.remove('loading');
+          }
+          const msg = (error && error.name === 'AbortError')
+            ? 'O envio demorou demais. Verifique sua conexao e tente novamente.'
+            : 'Nao foi possivel enviar agora. Verifique sua conexao e tente novamente.';
+          showSubmitError(msg);
+// DEBUG: console.log('[Vizier] Mensagem de erro exibida ao usuario:', msg);
         });
     });
+
+    // FIX MOBILE (2026-07-02): Notifica o script inline sincrono (index.html)
+    // que o listener submit do main.js esta ativo. A partir deste momento, o
+    // guardiao inline para de bloquear submits e deixa o main.js assumir o
+    // controle total com fetch assincrono. Sem esta notificacao, o guardiao
+    // inline continuaria bloqueando submits mesmo apos o main.js carregar,
+    // causando um deadlock: nem submit nativo, nem fetch AJAX funcionariam.
+    if (typeof window.__vizierFormReady === 'function') {
+      window.__vizierFormReady();
+    }
   };
 
   /* ---------- Counters ---------- */
@@ -709,7 +829,7 @@
     const btn = document.createElement('a');
     btn.href = `https://api.whatsapp.com/send?phone=${CONFIG.whatsapp}&text=Olá! Vim pelo site e gostaria de um orçamento.${CONFIG.utm}`;
     btn.target = '_blank';
-    btn.rel = 'noopener';
+    btn.rel = 'noopener noreferrer';
     btn.className = 'whatsapp-float';
     btn.setAttribute('aria-label', 'Falar no WhatsApp');
     btn.innerHTML = `

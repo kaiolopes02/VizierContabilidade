@@ -1,0 +1,58 @@
+{
+  "nodes": [
+    {
+      "id": "functions_api_submit",
+      "label": "submit.js",
+      "file_type": "code",
+      "source_file": "functions/api/submit.js",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "functions_api_submit_onrequestpost",
+      "label": "onRequestPost()",
+      "file_type": "code",
+      "source_file": "functions/api/submit.js",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "functions_api_submit_onrequestoptions",
+      "label": "onRequestOptions()",
+      "file_type": "code",
+      "source_file": "functions/api/submit.js",
+      "source_location": "L102",
+      "_origin": "ast"
+    },
+    {
+      "id": "js_main",
+      "label": "main.js",
+      "file_type": "code",
+      "source_file": "js/main.js",
+      "source_location": "L1",
+      "_origin": "ast"
+    }
+  ],
+  "edges": [
+    {
+      "source": "functions_api_submit",
+      "target": "functions_api_submit_onrequestpost",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "functions/api/submit.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "functions_api_submit",
+      "target": "functions_api_submit_onrequestoptions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "functions/api/submit.js",
+      "source_location": "L102",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

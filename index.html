@@ -58,8 +58,8 @@
         "email": "contato&#64;viziercontabilidade&#46;com&#46;br",
         "address": {
             "@type": "PostalAddress",
-            "streetAddress": "Rua das Esmeraldas, 395, Sala 121, Edifício Jardim",
-            "addressLocality": "Santo André",
+            "streetAddress": "AVENIDA PAULISTA, Nº 91, CONJ 905, BELA VISTA",
+            "addressLocality": "São Paulo",
             "addressRegion": "SP",
             "addressCountry": "BR"
         },
@@ -410,7 +410,38 @@
         </section>
     </main>
 
+    <!-- FIX MOBILE (2026-07-02): Script inline SINCRONO (sem defer/async).
+         Blinda qualquer <form> contra submit nativo ANTES do main.js (defer) carregar.
+         Em mobile com conexao lenta (3G/4G) ou Cloudflare Rocket Loader ativo, o download
+         do main.js pode demorar 5-8s. Sem esta protecao, o submit nativo dispararia um
+         POST para /api/submit que navega o usuario para uma pagina JSON pura (falha
+         silenciosa: sem confirmacao, sem erro visivel, email pode ou nao chegar).
+         Este script executa imediatamente (sincrono) e garante que mesmo se o usuario
+         conseguir interagir com um form antes do main.js estar pronto, o submit nativo
+         seja bloqueado. O main.js depois assume o controle com fetch assincrono. -->
+    <script>
+      (function() {
+        var guarded = false;
+        document.addEventListener('submit', function(e) {
+          var form = e.target;
+          if (form.id === 'form-orcamento' || form.id === 'form-troca') {
+            if (!guarded) {
+              // Se o main.js ainda nao registrou seu handler, bloqueia o submit nativo
+              // e exibe um feedback visual para o usuario saber que algo esta acontecendo.
+              e.preventDefault();
+              var btn = form.querySelector('button[type="submit"]');
+              if (btn && !btn.classList.contains('loading')) {
+                btn.textContent = 'Carregando...';
+                btn.classList.add('loading');
+              }
+            }
+          }
+        }, true);
+        // main.js chamara window.__vizierFormReady = true quando o listener estiver ativo.
+        window.__vizierFormReady = function() { guarded = true; };
+      })();
+    </script>
     <!-- JS -->
-    <script src="/js/main.js?v=4" defer></script>
+    <script src="/js/main.js?v=5" defer></script>
 </body>
 </html>
