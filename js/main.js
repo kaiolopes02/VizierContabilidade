@@ -20,9 +20,9 @@
     utm: '&utm_source=site&utm_medium=cta&utm_campaign=orcamento'
   };
 
-  // Static Forms endpoints - Primary: /api/submit (Cloudflare Worker), Fallback: Formspree
+  // Static Forms endpoints - Primary: /api/submit (Cloudflare Worker), Fallback: StaticForms
   const STATIC_FORMS_ENDPOINT = '/api/submit';
-  const STATIC_FORMS_FALLBACK = 'https://formspree.io/f/xqkrqkqz';
+  const STATIC_FORMS_FALLBACK = 'https://api.staticforms.xyz/submit';
 
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
@@ -322,10 +322,6 @@
               <input type="text" id="assunto-usuario" name="assunto" class="form-input" placeholder="Assunto da mensagem">
               <span class="form-error">Por favor, informe o assunto.</span>
             </div>
-            <input type="hidden" name="g-recaptcha-response">
-            <div class="form-group">
-              <div id="recaptcha-widget" class="g-recaptcha" data-sitekey="6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb" data-size="compact" data-expired-callback="recaptchaExpired"></div>
-            </div>
             <div class="form-group">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="lgpd-consent" name="lgpd_consent" required>
@@ -333,9 +329,6 @@
                   Declaro que li e concordo com a <a href="/pages/politica-de-privacidade.html" target="_blank">Política de Privacidade</a> e com o <a href="/pages/termos-de-uso.html" target="_blank">Termos de Uso</a> da Vizier Contabilidade.
                 </label>
               </div>
-            </div>
-            <div class="form-group">
-              <span class="form-error" id="recaptcha-error" style="display:none;">Por favor, marque que você não é um robô.</span>
             </div>
             <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Enviar Solicitação</button>
             <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--text-light);">
@@ -349,8 +342,6 @@
         </div>
       `;
       document.body.appendChild(div);
-      // Initialize recaptcha tracking property
-      div.recaptchaWidgetId = undefined;
       return div;
     };
 
@@ -387,26 +378,6 @@
       
       overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
-      // Clear the reCAPTCHA widget container to avoid "placeholder must be empty" error
-      const recaptchaContainer = overlay.querySelector('#recaptcha-widget');
-      if (recaptchaContainer) {
-        recaptchaContainer.innerHTML = '';
-      }
-      // Render reCAPTCHA widget if available
-      if (window.recaptchaReady && window.grecaptcha && typeof grecaptcha.render === 'function') {
-        setTimeout(() => {
-          try {
-            const widgetId = grecaptcha.render('recaptcha-widget', {
-              sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
-              size: 'compact'
-            });
-            // Store widget ID on the overlay element
-            overlay.recaptchaWidgetId = widgetId;
-          } catch (e) {
-            console.error('reCAPTCHA render error:', e);
-          }
-        }, 400);
-      }
       setTimeout(() => {
         const inp = overlay.querySelector('#modal-nome');
         if (inp) inp.focus();
@@ -415,15 +386,6 @@
 
     const close = () => {
       if (!overlay) return;
-      // Reset reCAPTCHA if widget was rendered
-      if (overlay.recaptchaWidgetId !== undefined) {
-        try {
-          grecaptcha.reset(overlay.recaptchaWidgetId);
-        } catch (e) {
-          console.error('reCAPTCHA reset error on close:', e);
-        }
-        overlay.recaptchaWidgetId = undefined;
-}
        
       const form = overlay.querySelector('form');
       // Remove extra fields for "Troca de Contador" on close
@@ -562,70 +524,6 @@
         valid = false;
       }
 
-      // reCAPTCHA validation — always required; block if unavailable
-      let recaptchaResponse = '';
-      let recaptchaAvailable = false;
-      const overlay = document.querySelector('.modal-overlay.active');
-      if (overlay && overlay.recaptchaWidgetId !== undefined) {
-        recaptchaAvailable = true;
-        try {
-          if (window.grecaptcha && grecaptcha.getResponse) {
-            recaptchaResponse = grecaptcha.getResponse();
-          }
-        } catch (e) {
-          console.error('reCAPTCHA error:', e);
-        }
-      }
-
-      if (!recaptchaAvailable || !window.grecaptcha) {
-        const recaptchaError = form.querySelector('#recaptcha-error');
-        if (recaptchaError) {
-          recaptchaError.textContent = 'Proteção anti-spam indisponível. Recarregue a página e tente novamente.';
-          recaptchaError.style.display = 'block';
-        }
-        valid = false;
-        e.preventDefault();
-        if (submitButton) {
-          submitButton.textContent = 'Enviar Solicitação';
-          submitButton.classList.remove('loading');
-        }
-        return;
-      }
-
-      const recaptchaField = form.querySelector('[name="g-recaptcha-response"]');
-      if (recaptchaField) {
-        recaptchaField.value = recaptchaResponse;
-      }
-
-      if (!recaptchaResponse) {
-        const recaptchaError = form.querySelector('#recaptcha-error');
-        if (recaptchaError) recaptchaError.style.display = 'block';
-        valid = false;
-
-        // Also try to reset recaptcha in case it's in a bad state
-        try {
-          const activeOverlay = document.querySelector('.modal-overlay.active');
-          if (activeOverlay && activeOverlay.recaptchaWidgetId !== undefined) {
-            grecaptcha.reset(activeOverlay.recaptchaWidgetId);
-          } else if (window.grecaptcha) {
-            // Clear the container and re-render
-            const recaptchaContainer = form.querySelector('#recaptcha-widget');
-            if (recaptchaContainer) {
-              recaptchaContainer.innerHTML = '';
-              window.recaptchaWidgetId = grecaptcha.render('recaptcha-widget', {
-                sitekey: '6Lf8ci8tAAAAABJYFFKTagVI2OFLbXh85EPeOhRb',
-                size: 'compact'
-              });
-            }
-          }
-        } catch (resetError) {
-          console.error('reCAPTCHA reset error:', resetError);
-        }
-      } else {
-        const recaptchaError = form.querySelector('#recaptcha-error');
-        if (recaptchaError) recaptchaError.style.display = 'none';
-      }
-
       if (!valid) {
         e.preventDefault();
         return;
@@ -636,10 +534,6 @@
 
       // Build FormData
       const formData = new FormData(form);
-      // Ensure recaptcha response is included (it already is via hidden input, but we ensure)
-      if (recaptchaResponse) {
-        formData.set('g-recaptcha-response', recaptchaResponse);
-      }
 
       // Button loading state
       const submitButton = form.querySelector('button[type="submit"]');
@@ -686,22 +580,21 @@
       // DEBUG: se timeout ainda ocorrer em testes mobile, aumente este valor.
       const fetchWithTimeout = (url, options, ms = 25000) => {
         const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), ms);
-        // DEBUG: console.log('[Vizier] Enviando para:', url);
-        return fetch(url, Object.assign({}, options, { signal: controller.signal }))
-          .then(res => { clearTimeout(id); /* DEBUG: console.log('[Vizier] Resposta status:', res.status); */ return res; })
-          .catch(err => { clearTimeout(id); throw err; });
-      };
+       const id = setTimeout(() => controller.abort(), ms);
+        return fetch(url, Object.assign({}, options, { signal: controller.signal, headers: Object.assign({}, options.headers, { 'Accept': 'application/json' }) }))
+         .then(res => { clearTimeout(id); return res; })
+         .catch(err => { clearTimeout(id); throw err; });
+     };
 
-// DEBUG: console.log('[Vizier] Iniciando envio do formulario para:', STATIC_FORMS_ENDPOINT);
       const submitWithFallback = (url) => fetchWithTimeout(url, { method: 'POST', body: formData })
         .then(response => {
+          // 405 on local dev (no worker running) is expected - treat as fallback trigger
+          if (response.status === 405) {
+            throw new Error('Method not allowed (local dev), falling back');
+          }
           if (!response.ok) {
-            // DEBUG: console.log('[Vizier] Resposta nao-ok do endpoint:', url, 'status:', response.status);
             throw new Error('Network response was not ok: ' + response.status);
           }
-
-          // DEBUG: console.log('[Vizier] Envio bem-sucedido via:', url);
 
           const modalContent = form.closest('.modal');
           const formSuccess = modalContent ? modalContent.querySelector('#form-success') : null;
@@ -715,19 +608,15 @@
               submitButton.classList.remove('loading');
             }
           } else {
-            // FIX MOBILE: se #form-success nao existir (DOM corrompido em mobile?), NAO
-            // chama submit nativo (causaria navegacao para JSON puro). Exibe erro visivel.
             console.error('[Vizier] Elemento #form-success nao encontrado no DOM do modal.');
             showSubmitError('Erro interno ao exibir confirmacao. Tente novamente.');
           }
-        });
-
-// DEBUG: console.log('[Vizier] Tentando endpoint primario:', STATIC_FORMS_ENDPOINT);
-      submitWithFallback(STATIC_FORMS_ENDPOINT)
-        .catch((err1) => {
-          // DEBUG: console.log('[Vizier] Endpoint primario falhou:', err1, 'tentando fallback:', STATIC_FORMS_FALLBACK);
-          return submitWithFallback(STATIC_FORMS_FALLBACK);
-        })
+});
+     submitWithFallback(STATIC_FORMS_ENDPOINT)
+       .catch((err1) => {
+          // Fallback silencioso para qualquer erro no endpoint local (405, ERR_ABORTED, etc.)
+         return submitWithFallback(STATIC_FORMS_FALLBACK);
+       })
         .catch((error) => {
           // FIX MOBILE (2026-07-02): Falha total — exibe erro visivel ao usuario.
           // Antes (versao anterior) chamava HTMLFormElement.prototype.submit.call(form),
@@ -859,13 +748,3 @@
     initAll();
   }
 })();
-
-window.recaptchaExpired = function() {
-  const err = document.getElementById('recaptcha-error');
-  if (err) err.style.display = 'block';
-  try {
-    const overlay = document.querySelector('.modal-overlay.active');
-    if (overlay && overlay.recaptchaWidgetId !== undefined)
-      grecaptcha.reset(overlay.recaptchaWidgetId);
-  } catch(e) {}
-};

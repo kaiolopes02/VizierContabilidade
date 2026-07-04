@@ -23,7 +23,7 @@ export async function onRequestPost(context) {
     // abaixo exigia "telefone". Sem este alias o Worker rejeitava todos os envios com
     // 400 ("Campo obrigatorio: telefone"), forcando o fallback no frontend.
     // FIX 2026-07-02: Mapear primeiro, depois remover "whatsapp" para evitar que o
-    // Formspree receba dois campos duplicados (whatsapp + telefone) com mesmo valor.
+    // StaticForms receba dois campos duplicados (whatsapp + telefone) com mesmo valor.
     const telefone = formData.get('telefone') || formData.get('whatsapp');
     if (telefone) {
       formData.set('telefone', telefone);
@@ -54,20 +54,14 @@ export async function onRequestPost(context) {
       });
     }
 
-    // FIX MOBILE (2026-07-02): Remover campos internos antes de encaminhar ao Formspree.
-    // accessKey, subject, g-recaptcha-response sao apenas para o fluxo interno; o
-    // Formspree nao precisa deles (a chave do Formspree e hardcoded no endpoint).
-    formData.delete('accessKey');
-    formData.delete('g-recaptcha-response');
-
-    // Forward to Formspree (fallback endpoint)
-    const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xqkrkqz';
-    // FIX MOBILE (2026-07-02): No runtime do Cloudflare Workers, o Content-Type
-    // multipart/form-data com boundary e gerado automaticamente ao passar FormData
-    // como body. Nao definimos Content-Type manualmente para nao sobrescrever o
-    // boundary gerado automaticamente. O Formspree espera exatamente este formato.
-    // console.log('[Worker] Encaminhando para Formspree...');
-    const response = await fetch(FORMSPREE_ENDPOINT, {
+    // Forward to StaticForms - must match main.js STATIC_FORMS_FALLBACK
+    const FORMSPREE_ENDPOINT = 'https://api.staticforms.xyz/submit';
+    // No runtime do Cloudflare Workers, o Content-Type multipart/form-data
+    // com boundary e gerado automaticamente ao passar FormData como body.
+   // Nao definimos Content-Type manualmente para preservar o boundary.
+   // console.log('[Worker] Encaminhando para StaticForms...');
+    console.log('[Worker] Forwarding fields:', [...formData.entries()].map(([k,v]) => `${k}=${v?.slice?.(0,20) || v}`).join(', '));
+   const response = await fetch(FORMSPREE_ENDPOINT, {
       method: 'POST',
       body: formData,
       headers: {
@@ -77,14 +71,14 @@ export async function onRequestPost(context) {
 
     if (!response.ok) {
       const text = await response.text();
-      console.error('[Worker] Formspree error:', response.status, text);
+      console.error('[Worker] StaticForms error:', response.status, text);
       return new Response(JSON.stringify({ error: 'Erro ao enviar formulário' }), {
         status: 502,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // console.log('[Worker] Formspree respondeu OK, email enviado.');
+    // console.log('[Worker] StaticForms respondeu OK, email enviado.');
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

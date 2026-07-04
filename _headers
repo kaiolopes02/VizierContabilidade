@@ -1,5 +1,5 @@
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://formspree.io https://api.formspree.io; frame-ancestors 'none'; frame-src https://www.google.com; base-uri 'self'; form-action 'self' https://api.whatsapp.com https://formspree.io; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com https://static.cloudflareinsights.com 'unsafe-inline'; script-src-elem 'self' https://www.google.com https://www.gstatic.com https://static.cloudflareinsights.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.google.com https://www.gstatic.com https://formspree.io https://api.formspree.io https://api.staticforms.xyz; frame-ancestors 'none'; frame-src https://www.google.com; base-uri 'self'; form-action 'self' https://api.whatsapp.com https://formspree.io; upgrade-insecure-requests
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

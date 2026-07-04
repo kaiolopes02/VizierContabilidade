@@ -1637,14 +1637,6 @@ p {
   }
   a { text-decoration: underline; }
 }
-/* 1. Garantir que o desafio do ReCAPTCHA apareça sobre tudo no mobile */
-iframe[src*="recaptcha/api2/bframe"] {
-    z-index: 9999999 !important;
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-}
 
 /* 2. Ajuste fino para o modal no mobile para evitar overflow/recortes */
 @media (max-width: 767px) {
@@ -1664,9 +1656,4 @@ iframe[src*="recaptcha/api2/bframe"] {
     .form-input, .form-select, .form-textarea {
         font-size: 16px !important; 
     }
-}
-
-/* 3. Garantir que elementos não sejam bloqueados por pointer-events */
-.g-recaptcha, .g-recaptcha > div {
-    pointer-events: auto !important;
 }
