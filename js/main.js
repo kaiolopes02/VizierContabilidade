@@ -259,7 +259,7 @@
         <div class="modal">
           <button type="button" class="modal-close" aria-label="Fechar modal">&times;</button>
           <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
-          <p class="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
+          <p class="modal-subtitle" id="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
           <!-- FIX MOBILE: action aponta para o Worker (same-origin, liberado pelo CSP).
                Antes apontava para api.staticforms.xyz, ausente da diretiva form-action do
                CSP: em mobile, se o submit nativo disparasse antes do JS, era bloqueado
@@ -341,9 +341,10 @@
               Ao enviar, você concorda com nossa <a href="/pages/politica-de-privacidade.html" style="color:var(--primary); text-decoration:underline;">Política de Privacidade</a>.
             </p>
           </form>
-          <div class="form-success" id="form-success" style="display:none;">
+          <div class="form-success" id="form-success" style="display:none; text-align:center; padding:2rem 1rem;">
             <div class="form-success-icon">✓</div>
-            <h4 style="font-size:1.25rem; margin-bottom:0.5rem; color:var(--text-primary);">Quase lá!</h4>
+            <h4 style="font-size:1.25rem; margin-bottom:0.5rem; color:var(--text-primary);">Mensagem enviada com sucesso!</h4>
+            <p style="color:var(--text-secondary); font-size:0.95rem;">Aguarde o retorno da nossa equipe.</p>
           </div>
         </div>
       `;
@@ -405,6 +406,11 @@
       const formSuccess = overlay.querySelector('#form-success');
       if (formSuccess) formSuccess.style.display = 'none';
 
+
+      const modalTitle = overlay.querySelector('#modal-title');
+      const modalSubtitle = overlay.querySelector('#modal-subtitle');
+      if (modalTitle) modalTitle.style.display = '';
+      if (modalSubtitle) modalSubtitle.style.display = '';
       overlay.classList.remove('active');
       document.body.style.overflow = '';
     };
@@ -606,6 +612,11 @@
             formSuccess.style.display = 'block';
             form.style.display = 'none';
 
+
+            const modalTitle = modalContent.querySelector('#modal-title');
+            const modalSubtitle = modalContent.querySelector('#modal-subtitle');
+            if (modalTitle) modalTitle.style.display = 'none';
+            if (modalSubtitle) modalSubtitle.style.display = 'none';
             if (submitButton) {
               submitButton.textContent = 'Enviar Solicitação';
               submitButton.classList.remove('loading');

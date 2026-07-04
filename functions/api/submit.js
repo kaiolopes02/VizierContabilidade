@@ -57,6 +57,15 @@ export async function onRequestPost(context) {
       });
     }
 
+    // StaticForms: customiza o subject do email de notificacao para facilitar a
+    // triagem no inbox. Formato: "{assunto} — {nome}".
+    // - assunto vazio/ausente -> fallback "Contato via site Vizier"
+    // - nome vazio/ausente     -> so o assunto (sem separador)
+    // set() sobrescreve qualquer subject existente.
+    const assuntoSubject = (formData.get('assunto') || '').trim() || 'Contato via site Vizier';
+    const nomeSubject = (formData.get('nome') || '').trim();
+    formData.set('subject', nomeSubject ? `${assuntoSubject} — ${nomeSubject}` : assuntoSubject);
+
     // Forward to StaticForms - must match main.js STATIC_FORMS_FALLBACK
     const FORMSPREE_ENDPOINT = 'https://api.staticforms.xyz/submit';
     // No runtime do Cloudflare Workers, o Content-Type multipart/form-data
