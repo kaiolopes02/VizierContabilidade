@@ -20,9 +20,15 @@
     utm: '&utm_source=site&utm_medium=cta&utm_campaign=orcamento'
   };
 
-  // Static Forms endpoints - Primary: /api/submit (Cloudflare Worker), Fallback: StaticForms
-  const STATIC_FORMS_ENDPOINT = '/api/submit';
+  // Static Forms endpoints — Primary: Cloudflare Worker, Fallback: StaticForms direct
   const STATIC_FORMS_FALLBACK = 'https://api.staticforms.xyz/submit';
+  // ponytail: local dev (Live Server, localhost, .local) skips Worker, hits StaticForms direct
+  const isLocalDev = () => {
+    const hostname = window.location.hostname;
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
+      || hostname === '0.0.0.0' || hostname.endsWith('.local');
+  };
+  const STATIC_FORMS_ENDPOINT = isLocalDev() ? STATIC_FORMS_FALLBACK : '/api/submit';
 
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
@@ -588,12 +594,9 @@
 
       const submitWithFallback = (url) => fetchWithTimeout(url, { method: 'POST', body: formData })
         .then(response => {
-          // 405 on local dev (no worker running) is expected - treat as fallback trigger
-          if (response.status === 405) {
-            throw new Error('Method not allowed (local dev), falling back');
-          }
+          // ponytail: qualquer !ok dispara fallback; dev local já pula /api/submit
           if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.status);
+            throw new Error(`HTTP ${response.status}: ${response.status === 405 ? 'Method not allowed' : 'Server error'}`);
           }
 
           const modalContent = form.closest('.modal');
@@ -614,8 +617,10 @@
 });
      submitWithFallback(STATIC_FORMS_ENDPOINT)
        .catch((err1) => {
-          // Fallback silencioso para qualquer erro no endpoint local (405, ERR_ABORTED, etc.)
-         return submitWithFallback(STATIC_FORMS_FALLBACK);
+          // ponytail: TypeError (rede offline/CORS/timeout) → fallback útil
+          // HTTP errors (response.status !== ok) → fallback pode ou não resolver,
+          // mas tentamos anyway; se falhar de novo, cai no .catch final com msg visível
+          return submitWithFallback(STATIC_FORMS_FALLBACK);
        })
         .catch((error) => {
           // FIX MOBILE (2026-07-02): Falha total — exibe erro visivel ao usuario.

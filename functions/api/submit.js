@@ -1,3 +1,6 @@
+// ponytail: Cloudflare Pages Function — só executa na Cloudflare ou `wrangler pages dev`.
+// Em local dev (Live Server / localhost), este Worker NÃO está rodando; o frontend
+// (main.js) detecta o ambiente e pula direto para api.staticforms.xyz/submit.
 export async function onRequestPost(context) {
   const { request, env } = context;
 
