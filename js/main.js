@@ -141,6 +141,11 @@
               <a href="/pages/termos-de-uso.html">Termos de Uso</a>
             </div>
           </div>
+          <div class="footer-credit" style="text-align:center; padding:1rem 0; border-top:1px solid rgba(255,255,255,0.1);">
+            <p style="color:rgba(255,255,255,0.5); font-size:0.8rem; margin:0;">
+              Site desenvolvido por <a href="https://www.linkedin.com/in/kaio-lopes-552817275" target="_blank" rel="noopener noreferrer" style="color:var(--secondary); text-decoration:none; font-weight:600;">Kaio Lopes</a>
+            </p>
+          </div>
         </div>
       </footer>
     `;
