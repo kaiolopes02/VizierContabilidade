@@ -42,7 +42,8 @@
 
   const formatPhone = (v) => {
     const n = v.replace(/\D/g, '').slice(0, 11);
-    if (n.length > 7) return `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`;
+    if (n.length === 11) return `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`;
+    if (n.length === 10) return `(${n.slice(0,2)}) ${n.slice(2,6)}-${n.slice(6)}`;
     if (n.length > 2) return `(${n.slice(0,2)}) ${n.slice(2)}`;
     if (n.length) return `(${n}`;
     return '';
@@ -330,15 +331,16 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="assunto-usuario">Assunto *</label>
-              <input type="text" id="assunto-usuario" name="assunto" class="form-input" placeholder="Assunto da mensagem">
+              <input type="text" id="assunto-usuario" name="assunto" class="form-input" required placeholder="Assunto da mensagem">
               <span class="form-error">Por favor, informe o assunto.</span>
             </div>
             <div class="form-group">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="lgpd-consent" name="lgpd_consent" required>
                 <label class="form-check-label" for="lgpd-consent">
-                  Declaro que li e concordo com a <a href="/pages/politica-de-privacidade.html" target="_blank">Política de Privacidade</a> e com o <a href="/pages/termos-de-uso.html" target="_blank">Termos de Uso</a> da Vizier Contabilidade.
+                  Declaro que li e concordo com a <a href="/pages/politica-de-privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a> e com o <a href="/pages/termos-de-uso.html" target="_blank" rel="noopener">Termos de Uso</a> da Vizier Contabilidade.
                 </label>
+                <span class="form-error">Você precisa aceitar a Política de Privacidade e os Termos de Uso.</span>
               </div>
             </div>
             <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Enviar Solicitação</button>

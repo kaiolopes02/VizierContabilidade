@@ -98,7 +98,6 @@ ul, ol {
   max-width: var(--container);
   margin: 0 auto;
   padding: 0 16px;
-  text-align: center !important;
 }
 
 /* Hero specific fixes */
@@ -145,7 +144,6 @@ ul, ol {
 .grid {
   display: grid;
   gap: 1.5rem;
-  align-items: center !important;
 }
 
 .grid > * {
@@ -719,12 +717,10 @@ p {
 
 /* ===== SECTIONS ===== */
 .section {
-  min-height: 100vh;
   padding-top: var(--header-height);
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
   position: relative;
 }
 
@@ -734,8 +730,8 @@ p {
 
 /* Hero */
 .hero {
-  min-height: 100vh !important;
-  min-height: 100dvh !important;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -982,6 +978,7 @@ p {
 
 .pricing-features {
   flex: 1;
+  text-align: left;
   margin-bottom: 1.5rem;
 }
 
