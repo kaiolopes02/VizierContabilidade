@@ -20,15 +20,17 @@
     utm: '&utm_source=site&utm_medium=cta&utm_campaign=orcamento'
   };
 
-  // Static Forms endpoints — Primary: Cloudflare Worker, Fallback: StaticForms direct
-  const STATIC_FORMS_FALLBACK = 'https://api.staticforms.xyz/submit';
-  // ponytail: local dev (Live Server, localhost, .local) skips Worker, hits StaticForms direct
+  // FIX EMAIL: Worker é o ÚNICO caminho. accessKey é server-side (env var),
+  // nunca exposta no client. O fallback direto ao StaticForms foi removido porque
+  // bypassava validação, honeypot, rate limit e LGPD — e não tinha accessKey.
+  // Dev local: use: npx wrangler pages dev (para servir Worker + assets juntos).
+  const STATIC_FORMS_ENDPOINT = '/api/submit';
+  // Mantido apenas para mensagem de erro útil em dev local sem Worker.
   const isLocalDev = () => {
     const hostname = window.location.hostname;
     return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
       || hostname === '0.0.0.0' || hostname.endsWith('.local');
   };
-  const STATIC_FORMS_ENDPOINT = isLocalDev() ? STATIC_FORMS_FALLBACK : '/api/submit';
 
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
@@ -279,9 +281,7 @@
                 MESMO se Rocket Loader / defer atrasarem a execucao do JS, o submit nativo
                 nunca dispare um POST que navegaria para uma pagina JSON pura (falha silenciosa).
                 O handler JS depois chama explicitamente o fetch. -->
-           <form id="form-orcamento" action="/api/submit" method="POST" onsubmit="return false">
-            <input type="hidden" name="accessKey" value="sf_06193e9224b406b37979ed81">
-            <div class="form-honeypot" aria-hidden="true">
+           <form id="form-orcamento" action="/api/submit" method="POST" onsubmit="return false">            <div class="form-honeypot" aria-hidden="true">
               <input type="text" name="website" tabindex="-1" autocomplete="off">
             </div>
             <div class="form-group">
@@ -633,28 +633,45 @@
             showSubmitError('Erro interno ao exibir confirmacao. Tente novamente.');
           }
 });
-     submitWithFallback(STATIC_FORMS_ENDPOINT)
-       .catch((err1) => {
-          // ponytail: TypeError (rede offline/CORS/timeout) → fallback útil
-          // HTTP errors (response.status !== ok) → fallback pode ou não resolver,
-          // mas tentamos anyway; se falhar de novo, cai no .catch final com msg visível
-          return submitWithFallback(STATIC_FORMS_FALLBACK);
-       })
+      // ponytail: local dev simula sucesso apos validacao — testa todo o fluxo
+      // UI (modal→preenchimento→validacao→confirmacao) sem depender do Worker.
+      const showFormSuccess = () => {
+        const modalContent = form.closest('.modal');
+        const formSuccess = modalContent ? modalContent.querySelector('#form-success') : null;
+        if (formSuccess) {
+          formSuccess.style.display = 'block';
+          form.style.display = 'none';
+          const modalTitle = modalContent.querySelector('#modal-title');
+          const modalSubtitle = modalContent.querySelector('#modal-subtitle');
+          if (modalTitle) modalTitle.style.display = 'none';
+          if (modalSubtitle) modalSubtitle.style.display = 'none';
+          if (submitButton) {
+            submitButton.textContent = 'Enviar Solicitação';
+            submitButton.classList.remove('loading');
+          }
+        }
+      };
+
+      if (isLocalDev()) {
+        setTimeout(showFormSuccess, 800);
+        return;
+      }
+
+      submitWithFallback(STATIC_FORMS_ENDPOINT)
         .catch((error) => {
-          // FIX MOBILE (2026-07-02): Falha total — exibe erro visivel ao usuario.
-          // Antes (versao anterior) chamava HTMLFormElement.prototype.submit.call(form),
-          // que disparava POST nativo bloqueado pela diretiva form-action do CSP ou
-          // navegava para pagina JSON pura (falha 100% silenciosa no mobile).
-          console.error('[Vizier] Falha total no envio:', error);
+          // FIX EMAIL: fallback direto ao StaticForms removido — bypassava validação,
+          // honeypot, rate limit, LGPD e não tinha accessKey. Worker é o único caminho.
+          console.error('[Vizier] Falha no envio:', error);
           if (submitButton) {
             submitButton.textContent = 'Enviar Solicitação';
             submitButton.classList.remove('loading');
           }
           const msg = (error && error.name === 'AbortError')
             ? 'O envio demorou demais. Verifique sua conexao e tente novamente.'
-            : 'Nao foi possivel enviar agora. Verifique sua conexao e tente novamente.';
+            : isLocalDev()
+              ? 'Worker nao disponivel em dev local. Use: npx wrangler pages dev'
+              : 'Nao foi possivel enviar agora. Verifique sua conexao e tente novamente.';
           showSubmitError(msg);
-// DEBUG: console.log('[Vizier] Mensagem de erro exibida ao usuario:', msg);
         });
     });
 

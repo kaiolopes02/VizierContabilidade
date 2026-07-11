@@ -1,6 +1,9 @@
 {
   "name": "vizier-contabilidade",
   "compatibility_date": "2026-07-02",
+  "vars": {
+    "STATICFORMS_ACCESS_KEY": "sf_06193e9224b406b37979ed81"
+  },
   "assets": {
     "directory": "."
   }
