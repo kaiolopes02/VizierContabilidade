@@ -34,6 +34,10 @@
 
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+
+  // i18n opcional: se /js/i18n.js falhar, tudo continua em pt-BR.
+  const tr = (key, fallback) => (typeof window.t === 'function' ? window.t(key, fallback) : fallback);
+  const currentLang = () => document.documentElement.lang || 'pt-BR';
   const throttle = (fn, ms) => {
     let last = 0;
     return (...a) => {
@@ -58,36 +62,36 @@
     const headerHTML = `
       <header class="header" id="header" role="banner">
         <div class="container">
-          <a href="/index.html" class="logo" aria-label="Vizier Contabilidade - Página inicial">
+          <a href="/index.html" class="logo" aria-label="Vizier Contabilidade - Página inicial" data-i18n-aria-label="nav.paginaInicial">
             <img src="/assets/images/Vizier.png" alt="" height="32" style="height:32px; width:auto; border-radius:8px; object-fit:contain;">
             ${CONFIG.nomeCurto}<span>.</span>
           </a>
-          <nav class="nav-desktop" role="navigation" aria-label="Navegação principal">
-            <a href="/index.html#servicos">Serviços</a>
-            <a href="/index.html#sobre">Sobre</a>
-            <a href="/index.html#processo">Processo</a>
-            <a href="/index.html#planos">Planos</a>
-            <a href="/pages/faq.html">FAQ</a>
+          <nav class="nav-desktop" role="navigation" aria-label="Navegação principal" data-i18n-aria-label="nav.navPrincipal">
+            <a href="/index.html#servicos" data-i18n="nav.servicos">Serviços</a>
+            <a href="/index.html#sobre" data-i18n="nav.sobre">Sobre</a>
+            <a href="/index.html#processo" data-i18n="nav.processo">Processo</a>
+            <a href="/index.html#planos" data-i18n="nav.planos">Planos</a>
+            <a href="/pages/faq.html" data-i18n="nav.faq">FAQ</a>
           </nav>
           <div class="nav-cta">
-            <a href="https://api.whatsapp.com/send?phone=${CONFIG.whatsapp}&text=Olá! Vim pelo site e gostaria de um orçamento.${CONFIG.utm}" class="btn btn-whatsapp btn-sm" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-            <button type="button" class="btn btn-primary btn-sm" data-modal="orcamento">Solicitar Orçamento</button>
+            <a href="https://api.whatsapp.com/send?phone=${CONFIG.whatsapp}&text=Olá! Vim pelo site e gostaria de um orçamento.${CONFIG.utm}" class="btn btn-whatsapp btn-sm" target="_blank" rel="noopener noreferrer" data-i18n="common.whatsapp" data-wa-msg="wa.orcamento">WhatsApp</a>
+            <button type="button" class="btn btn-primary btn-sm" data-modal="orcamento" data-i18n="common.solicitarOrcamento">Solicitar Orçamento</button>
           </div>
-          <button type="button" class="mobile-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-mobile">
+          <button type="button" class="mobile-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-mobile" data-i18n-aria-label="nav.abrirMenu">
             <span></span><span></span><span></span>
           </button>
         </div>
       </header>
-      <nav class="nav-mobile" id="nav-mobile" role="navigation" aria-label="Menu mobile">
-        <a href="/index.html#servicos">Serviços</a>
-        <a href="/index.html#sobre">Sobre</a>
-        <a href="/index.html#processo">Processo</a>
-        <a href="/index.html#planos">Planos</a>
-        <a href="/pages/faq.html">FAQ</a>
-        <a href="/pages/troque-de-contador.html">Troque de Contador</a>
-        <a href="${CONFIG.instagramUrl}" target="_blank" rel="noopener noreferrer">Instagram</a>
-        <a href="https://api.whatsapp.com/send?phone=${CONFIG.whatsapp}&text=Olá! Vim pelo site e gostaria de um orçamento.${CONFIG.utm}" class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
-        <button type="button" class="btn btn-primary" data-modal="orcamento">Solicitar Orçamento</button>
+      <nav class="nav-mobile" id="nav-mobile" role="navigation" aria-label="Menu mobile" data-i18n-aria-label="nav.menuMobile">
+        <a href="/index.html#servicos" data-i18n="nav.servicos">Serviços</a>
+        <a href="/index.html#sobre" data-i18n="nav.sobre">Sobre</a>
+        <a href="/index.html#processo" data-i18n="nav.processo">Processo</a>
+        <a href="/index.html#planos" data-i18n="nav.planos">Planos</a>
+        <a href="/pages/faq.html" data-i18n="nav.faq">FAQ</a>
+        <a href="/pages/troque-de-contador.html" data-i18n="nav.troqueContador">Troque de Contador</a>
+        <a href="${CONFIG.instagramUrl}" target="_blank" rel="noopener noreferrer" data-i18n="nav.instagram">Instagram</a>
+        <a href="https://api.whatsapp.com/send?phone=${CONFIG.whatsapp}&text=Olá! Vim pelo site e gostaria de um orçamento.${CONFIG.utm}" class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer" data-i18n="common.falarWhatsapp" data-wa-msg="wa.orcamento">Falar no WhatsApp</a>
+        <button type="button" class="btn btn-primary" data-modal="orcamento" data-i18n="common.solicitarOrcamento">Solicitar Orçamento</button>
       </nav>
     `;
 
@@ -97,7 +101,7 @@
           <div class="footer-grid">
             <div class="footer-brand">
               <div class="logo">${CONFIG.nomeCurto}<span>.</span></div>
-              <p>Contabilidade digital com atendimento humano. Simplificamos a gestão do seu negócio para você focar no que realmente importa.</p>
+              <p data-i18n="foot.brand">Contabilidade digital com atendimento humano. Simplificamos a gestão do seu negócio para você focar no que realmente importa.</p>
               <div class="footer-social">
                 <a href="${CONFIG.instagramUrl}" target="_blank" rel="noopener noreferrer" aria-label="Instagram ${CONFIG.instagram}">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
@@ -108,21 +112,21 @@
               </div>
             </div>
             <div class="footer-links">
-              <h4 class="footer-title">Serviços</h4>
-              <a href="/pages/abertura-de-empresa.html">Abertura de Empresa</a>
-              <a href="/pages/contabilidade-mensal.html">Contabilidade Mensal</a>
-              <a href="/pages/folha-de-pagamento.html">Folha de Pagamento</a>
-              <a href="/pages/declaracoes-fiscais.html">Declarações Fiscais</a>
+              <h4 class="footer-title" data-i18n="nav.servicos">Serviços</h4>
+              <a href="/pages/abertura-de-empresa.html" data-i18n="svc.abertura.title">Abertura de Empresa</a>
+              <a href="/pages/contabilidade-mensal.html" data-i18n="svc.contabilidade.title">Contabilidade Mensal</a>
+              <a href="/pages/folha-de-pagamento.html" data-i18n="svc.folha.title">Folha de Pagamento</a>
+              <a href="/pages/declaracoes-fiscais.html" data-i18n="svc.declaracoes.title">Declarações Fiscais</a>
             </div>
             <div class="footer-links">
-              <h4 class="footer-title">Institucional</h4>
-              <a href="/index.html#sobre">Sobre Nós</a>
-              <a href="/pages/faq.html">FAQ</a>
-              <a href="/pages/troque-de-contador.html">Troque de Contador</a>
-              <a href="/pages/planos.html">Planos</a>
+              <h4 class="footer-title" data-i18n="foot.institucional">Institucional</h4>
+              <a href="/index.html#sobre" data-i18n="foot.sobreNos">Sobre Nós</a>
+              <a href="/pages/faq.html" data-i18n="nav.faq">FAQ</a>
+              <a href="/pages/troque-de-contador.html" data-i18n="nav.troqueContador">Troque de Contador</a>
+              <a href="/pages/planos.html" data-i18n="nav.planos">Planos</a>
             </div>
             <div class="footer-contact">
-              <h4 class="footer-title">Contato</h4>
+              <h4 class="footer-title" data-i18n="foot.contato">Contato</h4>
               <p>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.5 19.5 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                 ${CONFIG.whatsappFmt}
@@ -138,15 +142,15 @@
             </div>
           </div>
           <div class="footer-bottom">
-            <p>© ${new Date().getFullYear()} ${CONFIG.empresa}. Todos os direitos reservados.</p>
+            <p>© ${new Date().getFullYear()} ${CONFIG.empresa}. <span data-i18n="foot.direitos">Todos os direitos reservados.</span></p>
             <div class="footer-legal">
-              <a href="/pages/politica-de-privacidade.html">Política de Privacidade (LGPD)</a>
-              <a href="/pages/termos-de-uso.html">Termos de Uso</a>
+              <a href="/pages/politica-de-privacidade.html" data-i18n="foot.privacidade">Política de Privacidade (LGPD)</a>
+              <a href="/pages/termos-de-uso.html" data-i18n="foot.termos">Termos de Uso</a>
             </div>
           </div>
           <div class="footer-credit" style="text-align:center; padding:1rem 0; border-top:1px solid rgba(255,255,255,0.1);">
             <p style="color:rgba(255,255,255,0.5); font-size:0.8rem; margin:0;">
-              Site desenvolvido por <a href="https://www.linkedin.com/in/kaio-lopes-552817275" target="_blank" rel="noopener noreferrer" style="color:var(--secondary); text-decoration:none; font-weight:600;">Kaio Lopes</a>
+              <span data-i18n="foot.desenvolvido">Site desenvolvido por</span> <a href="https://www.linkedin.com/in/kaio-lopes-552817275" target="_blank" rel="noopener noreferrer" style="color:var(--secondary); text-decoration:none; font-weight:600;">Kaio Lopes</a>
             </p>
           </div>
         </div>
@@ -265,9 +269,9 @@
       div.setAttribute('aria-labelledby', 'modal-title');
       div.innerHTML = `
         <div class="modal">
-          <button type="button" class="modal-close" aria-label="Fechar modal">&times;</button>
+          <button type="button" class="modal-close" aria-label="Fechar modal" data-i18n-aria-label="modal.fechar">&times;</button>
           <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
-          <p class="modal-subtitle" id="modal-subtitle">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
+          <p class="modal-subtitle" id="modal-subtitle" data-i18n="modal.subtitulo">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
           <!-- FIX MOBILE: action aponta para o Worker (same-origin, liberado pelo CSP).
                Antes apontava para api.staticforms.xyz, ausente da diretiva form-action do
                CSP: em mobile, se o submit nativo disparasse antes do JS, era bloqueado
@@ -285,73 +289,73 @@
               <input type="text" name="website" tabindex="-1" autocomplete="off">
             </div>
             <div class="form-group">
-              <label class="form-label" for="modal-nome">Nome completo *</label>
-              <input type="text" id="modal-nome" name="nome" class="form-input" required minlength="3" placeholder="Seu nome completo">
-              <span class="form-error">Por favor, insira seu nome completo.</span>
+              <label class="form-label" for="modal-nome" data-i18n="modal.nome">Nome completo *</label>
+              <input type="text" id="modal-nome" name="nome" class="form-input" required minlength="3" placeholder="Seu nome completo" data-i18n-placeholder="modal.nomePh">
+              <span class="form-error" data-i18n="modal.nomeErro">Por favor, insira seu nome completo.</span>
             </div>
             <div class="form-group">
-              <label class="form-label" for="modal-email">E-mail *</label>
-              <input type="email" id="modal-email" name="email" class="form-input" required placeholder="seu@email.com">
-              <span class="form-error">Por favor, insira um e-mail válido.</span>
+              <label class="form-label" for="modal-email" data-i18n="modal.email">E-mail *</label>
+              <input type="email" id="modal-email" name="email" class="form-input" required placeholder="seu@email.com" data-i18n-placeholder="modal.emailPh">
+              <span class="form-error" data-i18n="modal.emailErro">Por favor, insira um e-mail válido.</span>
             </div>
             <div class="form-group">
-              <label class="form-label" for="modal-whatsapp">WhatsApp *</label>
+              <label class="form-label" for="modal-whatsapp" data-i18n="modal.whats">WhatsApp *</label>
               <input type="tel" id="modal-whatsapp" name="whatsapp" class="form-input" required placeholder="(11) 98765-4321" maxlength="15">
-              <span class="form-error">Por favor, insira um WhatsApp válido.</span>
+              <span class="form-error" data-i18n="modal.whatsErro">Por favor, insira um WhatsApp válido.</span>
             </div>
             <div class="form-group">
-              <label class="form-label" for="modal-tipo">Tipo de empresa *</label>
+              <label class="form-label" for="modal-tipo" data-i18n="modal.tipo">Tipo de empresa *</label>
               <select id="modal-tipo" name="tipo_empresa" class="form-select" required>
-                <option value="">Selecione...</option>
+                <option value="" data-i18n="modal.selecione">Selecione...</option>
                 <option value="MEI">MEI</option>
                 <option value="Simples Nacional">Simples Nacional</option>
                 <option value="Lucro Presumido">Lucro Presumido</option>
                 <option value="Lucro Real">Lucro Real</option>
-                <option value="Outro">Outro</option>
+                <option value="Outro" data-i18n="modal.outro">Outro</option>
               </select>
-              <span class="form-error">Selecione o tipo de empresa.</span>
+              <span class="form-error" data-i18n="modal.tipoErro">Selecione o tipo de empresa.</span>
             </div>
             <div class="form-group">
-              <label class="form-label" for="modal-servico">Serviço de interesse *</label>
+              <label class="form-label" for="modal-servico" data-i18n="modal.servico">Serviço de interesse *</label>
               <select id="modal-servico" name="servico" class="form-select" required>
-                <option value="">Selecione...</option>
-                <option value="Abertura de Empresa">Abertura de Empresa</option>
-                <option value="Contabilidade Mensal">Contabilidade Mensal</option>
-                <option value="Folha de Pagamento">Folha de Pagamento</option>
-                <option value="Declarações Fiscais">Declarações Fiscais</option>
-                <option value="Planejamento Tributário">Planejamento Tributário</option>
-                <option value="Consultoria Contábil">Consultoria Contábil</option>
-                <option value="Troca de Contador">Troca de Contador</option>
+                <option value="" data-i18n="modal.selecione">Selecione...</option>
+                <option value="Abertura de Empresa" data-i18n="svc.abertura.title">Abertura de Empresa</option>
+                <option value="Contabilidade Mensal" data-i18n="svc.contabilidade.title">Contabilidade Mensal</option>
+                <option value="Folha de Pagamento" data-i18n="svc.folha.title">Folha de Pagamento</option>
+                <option value="Declarações Fiscais" data-i18n="svc.declaracoes.title">Declarações Fiscais</option>
+                <option value="Planejamento Tributário" data-i18n="svc.tributario.title">Planejamento Tributário</option>
+                <option value="Consultoria Contábil" data-i18n="svc.consultoria.title">Consultoria Contábil</option>
+                <option value="Troca de Contador" data-i18n="modal.servico.troca">Troca de Contador</option>
               </select>
-              <span class="form-error">Selecione um serviço.</span>
+              <span class="form-error" data-i18n="modal.servicoErro">Selecione um serviço.</span>
             </div>
             <div class="form-group">
-              <label class="form-label" for="modal-mensagem">Mensagem (opcional)</label>
-              <textarea id="modal-mensagem" name="mensagem" class="form-textarea" placeholder="Conte-nos mais sobre sua necessidade..."></textarea>
+              <label class="form-label" for="modal-mensagem" data-i18n="modal.mensagem">Mensagem (opcional)</label>
+              <textarea id="modal-mensagem" name="mensagem" class="form-textarea" placeholder="Conte-nos mais sobre sua necessidade..." data-i18n-placeholder="modal.mensagemPh"></textarea>
             </div>
             <div class="form-group">
-              <label class="form-label" for="assunto-usuario">Assunto *</label>
-              <input type="text" id="assunto-usuario" name="assunto" class="form-input" required placeholder="Assunto da mensagem">
-              <span class="form-error">Por favor, informe o assunto.</span>
+              <label class="form-label" for="assunto-usuario" data-i18n="modal.assunto">Assunto *</label>
+              <input type="text" id="assunto-usuario" name="assunto" class="form-input" required placeholder="Assunto da mensagem" data-i18n-placeholder="modal.assuntoPh">
+              <span class="form-error" data-i18n="modal.assuntoErro">Por favor, informe o assunto.</span>
             </div>
             <div class="form-group">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="lgpd-consent" name="lgpd_consent" required>
                 <label class="form-check-label" for="lgpd-consent">
-                  Declaro que li e concordo com a <a href="/pages/politica-de-privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a> e com o <a href="/pages/termos-de-uso.html" target="_blank" rel="noopener">Termos de Uso</a> da Vizier Contabilidade.
+                  <span data-i18n="modal.lgpdPre">Declaro que li e concordo com a</span> <a href="/pages/politica-de-privacidade.html" target="_blank" rel="noopener" data-i18n="modal.lgpdPolitica">Política de Privacidade</a> <span data-i18n="modal.lgpdE">e com o</span> <a href="/pages/termos-de-uso.html" target="_blank" rel="noopener" data-i18n="modal.lgpdTermos">Termos de Uso</a> <span data-i18n="modal.lgpdPos">da Vizier Contabilidade.</span>
                 </label>
-                <span class="form-error">Você precisa aceitar a Política de Privacidade e os Termos de Uso.</span>
+                <span class="form-error" data-i18n="modal.lgpdErro">Você precisa aceitar a Política de Privacidade e os Termos de Uso.</span>
               </div>
             </div>
             <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Enviar Solicitação</button>
             <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--text-light);">
-              Ao enviar, você concorda com nossa <a href="/pages/politica-de-privacidade.html" style="color:var(--primary); text-decoration:underline;">Política de Privacidade</a>.
+              <span data-i18n="modal.notaPre">Ao enviar, você concorda com nossa</span> <a href="/pages/politica-de-privacidade.html" style="color:var(--primary); text-decoration:underline;" data-i18n="modal.notaLink">Política de Privacidade</a>.
             </p>
           </form>
           <div class="form-success" id="form-success" style="display:none; text-align:center; padding:2rem 1rem;">
             <div class="form-success-icon">✓</div>
-            <h4 style="font-size:1.25rem; margin-bottom:0.5rem; color:var(--text-primary);">Mensagem enviada com sucesso!</h4>
-            <p style="color:var(--text-secondary); font-size:0.95rem;">Aguarde o retorno da nossa equipe.</p>
+            <h4 style="font-size:1.25rem; margin-bottom:0.5rem; color:var(--text-primary);" data-i18n="modal.sucessoTitle">Mensagem enviada com sucesso!</h4>
+            <p style="color:var(--text-secondary); font-size:0.95rem;" data-i18n="modal.sucessoText">Aguarde o retorno da nossa equipe.</p>
           </div>
         </div>
       `;
@@ -359,11 +363,14 @@
       return div;
     };
 
-    const open = (title = 'Solicitação de Orçamento', isTroca = false) => {
+    const open = (title = tr('modal.titulo', 'Solicitação de Orçamento'), isTroca = false) => {
       if (!overlay) overlay = create();
       // Set the title
       const titleEl = overlay.querySelector('#modal-title');
       if (titleEl) titleEl.textContent = title;
+      overlay.dataset.variant = isTroca ? 'troca' : 'orcamento';
+      const submitBtn = overlay.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.textContent = tr('modal.enviar', 'Enviar Solicitação');
       
       // Inject extra fields for "Troca de Contador" (Bug #5)
       const form = overlay.querySelector('form');
@@ -375,14 +382,14 @@
         extraFields.className = 'troca-extra-fields';
         extraFields.innerHTML = `
           <div class="form-group">
-            <label class="form-label" for="modal-cnpj">CNPJ da empresa *</label>
+            <label class="form-label" for="modal-cnpj" data-i18n="modal.cnpj">CNPJ da empresa *</label>
             <input type="text" id="modal-cnpj" name="cnpj" class="form-input" required placeholder="00.000.000/0000-00" maxlength="18">
-            <span class="form-error">Por favor, insira o CNPJ válido.</span>
+            <span class="form-error" data-i18n="modal.cnpjErro">Por favor, insira o CNPJ válido.</span>
           </div>
           <div class="form-group">
-            <label class="form-label" for="modal-contador-atual">Contador atual *</label>
-            <input type="text" id="modal-contador-atual" name="contador_atual" class="form-input" required placeholder="Nome do escritório ou contador">
-            <span class="form-error">Por favor, informe o contador atual.</span>
+            <label class="form-label" for="modal-contador-atual" data-i18n="modal.contador">Contador atual *</label>
+            <input type="text" id="modal-contador-atual" name="contador_atual" class="form-input" required placeholder="Nome do escritório ou contador" data-i18n-placeholder="modal.contadorPh">
+            <span class="form-error" data-i18n="modal.contadorErro">Por favor, informe o contador atual.</span>
           </div>
         `;
         servicoGroup.insertAdjacentElement('afterend', extraFields);
@@ -428,18 +435,10 @@
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        // Determine custom title and type based on trigger text
-        let modalTitle = 'Solicitação de Orçamento'; // default
-        let isTroca = false;
-        const triggerText = trigger.textContent.trim().toLowerCase();
-        if (triggerText.includes('transferência')) {
-          modalTitle = 'Solicitação de Transferência';
-          isTroca = true;
-        } else if (triggerText.includes('troca')) {
-          isTroca = true;
-        } else if (triggerText.includes('proposta')) {
-          // keep default
-        }
+        // Determine custom title and type. data-modal-tipo mantém a detecção
+        // estável após a tradução; o texto continua como fallback.
+        const isTroca = trigger.dataset.modalTipo === 'troca' || /transfer|troca/i.test(trigger.textContent);
+        const modalTitle = isTroca ? tr('modal.tituloTroca', 'Solicitação de Transferência') : tr('modal.titulo', 'Solicitação de Orçamento');
         open(modalTitle, isTroca);
         return false;
       }
@@ -456,6 +455,15 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && overlay?.classList.contains('active')) close();
+    });
+
+    document.addEventListener('vizier:lang', () => {
+      if (!overlay || !overlay.classList.contains('active')) return;
+      const isTroca = overlay.dataset.variant === 'troca';
+      const titleEl = overlay.querySelector('#modal-title');
+      if (titleEl) titleEl.textContent = isTroca ? tr('modal.tituloTroca', 'Solicitação de Transferência') : tr('modal.titulo', 'Solicitação de Orçamento');
+      const submitBtn = overlay.querySelector('button[type="submit"]');
+      if (submitBtn && !submitBtn.classList.contains('loading')) submitBtn.textContent = tr('modal.enviar', 'Enviar Solicitação');
     });
   };
 
@@ -557,7 +565,7 @@
       // Button loading state
       const submitButton = form.querySelector('button[type="submit"]');
       if (submitButton) {
-        submitButton.textContent = 'Enviando...';
+        submitButton.textContent = tr('modal.enviando', 'Enviando...');
         submitButton.classList.add('loading');
       }
 
@@ -625,12 +633,12 @@
             if (modalTitle) modalTitle.style.display = 'none';
             if (modalSubtitle) modalSubtitle.style.display = 'none';
             if (submitButton) {
-              submitButton.textContent = 'Enviar Solicitação';
+              submitButton.textContent = tr('modal.enviar', 'Enviar Solicitação');
               submitButton.classList.remove('loading');
             }
           } else {
             console.error('[Vizier] Elemento #form-success nao encontrado no DOM do modal.');
-            showSubmitError('Erro interno ao exibir confirmacao. Tente novamente.');
+            showSubmitError(tr('modal.erroInterno', 'Erro interno ao exibir confirmacao. Tente novamente.'));
           }
 });
       // ponytail: local dev simula sucesso apos validacao — testa todo o fluxo
@@ -646,7 +654,7 @@
           if (modalTitle) modalTitle.style.display = 'none';
           if (modalSubtitle) modalSubtitle.style.display = 'none';
           if (submitButton) {
-            submitButton.textContent = 'Enviar Solicitação';
+            submitButton.textContent = tr('modal.enviar', 'Enviar Solicitação');
             submitButton.classList.remove('loading');
           }
         }
@@ -663,14 +671,14 @@
           // honeypot, rate limit, LGPD e não tinha accessKey. Worker é o único caminho.
           console.error('[Vizier] Falha no envio:', error);
           if (submitButton) {
-            submitButton.textContent = 'Enviar Solicitação';
+            submitButton.textContent = tr('modal.enviar', 'Enviar Solicitação');
             submitButton.classList.remove('loading');
           }
           const msg = (error && error.name === 'AbortError')
-            ? 'O envio demorou demais. Verifique sua conexao e tente novamente.'
+            ? tr('modal.erroTimeout', 'O envio demorou demais. Verifique sua conexao e tente novamente.')
             : isLocalDev()
               ? 'Worker nao disponivel em dev local. Use: npx wrangler pages dev'
-              : 'Nao foi possivel enviar agora. Verifique sua conexao e tente novamente.';
+              : tr('modal.erroEnvio', 'Nao foi possivel enviar agora. Verifique sua conexao e tente novamente.');
           showSubmitError(msg);
         });
     });
@@ -691,10 +699,11 @@
     const counters = $$('[data-counter]');
     if (!counters.length) return;
 
+    const suffixOf = (el) => (el.dataset.suffixI18n ? tr(el.dataset.suffixI18n, el.dataset.suffix || '') : (el.dataset.suffix || ''));
+    const amount = (el, value) => `${el.dataset.prefix || ''}${value.toLocaleString(currentLang())}${suffixOf(el)}`;
+
     const animate = (el) => {
       const target = parseInt(el.dataset.counter, 10);
-      const suffix = el.dataset.suffix || '';
-      const prefix = el.dataset.prefix || '';
       const duration = 2000;
       const start = performance.now();
 
@@ -702,7 +711,7 @@
         const progress = Math.min((now - start) / duration, 1);
         const ease = 1 - Math.pow(1 - progress, 3);
         const current = Math.floor(ease * target);
-        el.textContent = `${prefix}${current.toLocaleString('pt-BR')}${suffix}`;
+        el.textContent = amount(el, current);
         if (progress < 1) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
@@ -718,6 +727,12 @@
     }, { threshold: 0.15 });
 
     counters.forEach(c => obs.observe(c));
+
+    document.addEventListener('vizier:lang', () => {
+      $$('[data-counter]').forEach(el => {
+        el.textContent = amount(el, parseInt(el.dataset.counter, 10));
+      });
+    });
   };
 
   /* ---------- LGPD ---------- */
@@ -728,10 +743,10 @@
     banner.className = 'cookie-banner';
     banner.innerHTML = `
       <div class="cookie-content container">
-        <p>Utilizamos cookies para melhorar sua experiência. Ao continuar navegando, você concorda com nossa <a href="/pages/politica-de-privacidade.html">Política de Privacidade</a> e uso de cookies essenciais.</p>
+        <p><span data-i18n="cookie.textoPre">Utilizamos cookies para melhorar sua experiência. Ao continuar navegando, você concorda com nossa</span> <a href="/pages/politica-de-privacidade.html" data-i18n="cookie.politica">Política de Privacidade</a> <span data-i18n="cookie.textoPos">e uso de cookies essenciais.</span></p>
         <div class="cookie-buttons">
-          <button type="button" class="btn btn-sm btn-secondary" id="cookie-reject">Recusar</button>
-          <button type="button" class="btn btn-sm btn-primary" id="cookie-accept">Aceitar</button>
+          <button type="button" class="btn btn-sm btn-secondary" id="cookie-reject" data-i18n="cookie.recusar">Recusar</button>
+          <button type="button" class="btn btn-sm btn-primary" id="cookie-accept" data-i18n="cookie.aceitar">Aceitar</button>
         </div>
       </div>
     `;
@@ -761,6 +776,8 @@
     btn.rel = 'noopener noreferrer';
     btn.className = 'whatsapp-float';
     btn.setAttribute('aria-label', 'Falar no WhatsApp');
+    btn.setAttribute('data-i18n-aria-label', 'common.falarWhatsapp');
+    btn.dataset.waMsg = 'wa.orcamento';
     btn.innerHTML = `
       <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>

@@ -561,6 +561,39 @@ p {
   display: none;
 }
 
+/* Seletor de idioma (injetado pelo i18n.js; sem JS ele não aparece) */
+.lang-select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--neutral);
+  background: var(--white);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 0.4rem 0.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+  max-width: 7.5rem;
+}
+
+.lang-select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Em tablets o header já é apertado: mantém o seletor acessível sem empurrar o menu. */
+  .lang-select {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    z-index: 999;
+    box-shadow: var(--shadow);
+  }
+}
+
 .mobile-toggle {
   display: flex;
   flex-direction: column;
