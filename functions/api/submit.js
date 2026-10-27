@@ -7,8 +7,22 @@
 // Rate Limiting Rules se escala.
 const RATE_LIMITS = new Map(); // IP -> {count, resetAt}
 
+// ponytail: limpeza preguiçosa do rate limit map — remove entradas expiradas a cada request.
+// Substitui setInterval no escopo global (proibido no Workers runtime: "Disallowed
+// operation called within global scope"). O Map não é compartilhado entre instâncias;
+// cold-start zera naturalmente.
+function cleanupRateLimits() {
+  const now = Date.now();
+  for (const [ip, entry] of RATE_LIMITS) {
+    if (now >= entry.resetAt) RATE_LIMITS.delete(ip);
+  }
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
+
+  // Lazy cleanup: remove entradas expiradas a cada request
+  cleanupRateLimits();
 
   try {
     const formData = await request.formData();
@@ -136,12 +150,3 @@ export async function onRequestOptions() {
     }
   });
 }
-
-// ponytail: limpeza periódica do rate limit map para evitar memory leak.
-// Workers têm vida curta, mas se ficar ativo por horas, limpa entradas expiradas.
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, entry] of RATE_LIMITS) {
-    if (now >= entry.resetAt) RATE_LIMITS.delete(ip);
-  }
-}, 120000); // a cada 2 min

@@ -1,0 +1,4 @@
+# Artefatos locais do Wrangler / bundle — nunca versionar
+.wrangler/
+_worker.bundle
+node_modules/
