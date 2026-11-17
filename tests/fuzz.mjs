@@ -57,14 +57,16 @@ globalThis.fetch = async (url, init) => {
 
 let ipSeq = 0;
 const nextIp = () => `203.0.113.${(ipSeq++ % 250) + 2}`;
+const SITE_ORIGIN = "https://www.viziercontabilidade.com.br";
 
-async function post(body, { headers = {}, method = "POST", env } = {}) {
+async function post(body, { headers = {}, method = "POST", env, origin = SITE_ORIGIN } = {}) {
   captured = null;
   const h = {
     "Content-Type": "application/x-www-form-urlencoded",
     "CF-Connecting-IP": nextIp(),
     ...headers,
   };
+  if (origin !== null) h.Origin = origin;
   const request = new Request(`${BASE}/api/submit`, {
     method,
     headers: h,
@@ -91,15 +93,19 @@ console.log(`\n== 1. In-process: validacao e forwarding (${BASE}) ==`);
 
 // --- Origin / allowlist -----------------------------------------------------
 {
-  const r = await post(form(VALID));
-  expectStatus("POST sem Origin e aceito (relay aberto para nao-navegador)", 200, r.status, "F1");
-  if (r.status === 200) findings.push("F1: POST sem Origin e forwarded ao StaticForms");
+  // Sem Origin nao ha como aplicar a allowlist: o Worker recusaria, o que
+  // fecha o relay aberto (achado F1).
+  const r = await post(form(VALID), { origin: null });
+  expectStatus("POST sem Origin -> 403 (F1 corrigido)", 403, r.status);
 }
 {
-  const r = await post(form(VALID), {
-    headers: { Origin: "https://www.viziercontabilidade.com.br" },
-  });
+  const r = await post(form(VALID), { origin: SITE_ORIGIN });
   expectStatus("POST com Origin da allowlist", 200, r.status);
+}
+{
+  // Dev local: o navegador manda a origem da propria requisicao.
+  const r = await post(form(VALID), { origin: new URL(BASE).origin });
+  expectStatus("POST com Origin igual a origem da requisicao", 200, r.status);
 }
 for (const origin of [
   "https://www.viziercontabilidade.com.br.evil.example",
@@ -108,13 +114,13 @@ for (const origin of [
   "https://www.viziercontabilidade.com.br:443",
   "https://evil.example",
 ]) {
-  const r = await post(form(VALID), { headers: { Origin: origin } });
+  const r = await post(form(VALID), { origin });
   expectStatus(`POST com Origin "${origin}"`, 403, r.status);
 }
 {
   // Origin vazio cai no mesmo caminho de "sem Origin": header falsificado.
-  const r = await post(form(VALID), { headers: { Origin: "" } });
-  expectStatus("POST com Origin vazio (mesmo caso de F1)", 200, r.status, "F1");
+  const r = await post(form(VALID), { origin: "" });
+  expectStatus("POST com Origin vazio -> 403", 403, r.status);
 }
 
 // --- Campos obrigatorios ----------------------------------------------------
@@ -300,17 +306,29 @@ async function live(name, path_, init = {}, expected) {
 }
 
 const urlencoded = { "Content-Type": "application/x-www-form-urlencoded" };
+const site = { ...urlencoded, Origin: SITE_ORIGIN };
+// Em local o rate limit conta por CF-Connecting-IP: um IP novo por execucao
+// evita colidir com o run anterior. Em producao a Cloudflare bloqueia
+// requests que enviam esse header (403 error 1000), entao nao enviamos.
+const localIp = /localhost|127\.0\.0\.1/.test(BASE)
+  ? { "CF-Connecting-IP": `203.0.113.${(Date.now() % 250) + 2}` }
+  : {};
 
 await live("GET /api/submit", "/api/submit", {}, 405);
-await live("POST /api/submit sem body", "/api/submit", { method: "POST" }, 400);
+await live("POST /api/submit sem body", "/api/submit", { method: "POST", headers: { ...site, ...localIp } }, 400);
+await live("POST /api/submit sem Origin -> 403", "/api/submit", {
+  method: "POST",
+  headers: { ...urlencoded, ...localIp },
+  body: form(VALID),
+}, 403);
 await live("POST /api/submit com JSON", "/api/submit", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: { ...site, ...localIp, "Content-Type": "application/json" },
   body: '{"nome":"x"}',
 }, 400);
 await live("POST multipart quebrado", "/api/submit", {
   method: "POST",
-  headers: { "Content-Type": "multipart/form-data; boundary=naoexiste" },
+  headers: { ...site, ...localIp, "Content-Type": "multipart/form-data; boundary=naoexiste" },
   body: "lixo",
 }, 400);
 await live("PUT /api/submit", "/api/submit", { method: "PUT" }, [405, 404, 400]);
@@ -319,19 +337,19 @@ await live("HEAD /api/submit", "/api/submit", { method: "HEAD" }, [405, 404, 400
 await live("OPTIONS /api/submit", "/api/submit", { method: "OPTIONS" }, 204);
 await live("POST com Origin nao permitida", "/api/submit", {
   method: "POST",
-  headers: { ...urlencoded, Origin: "https://evil.example" },
+  headers: { ...urlencoded, ...localIp, Origin: "https://evil.example" },
   body: form(VALID),
 }, 403);
 await live("POST valido (chave real -> 200, chave de teste -> 502)", "/api/submit", {
   method: "POST",
-  headers: urlencoded,
+  headers: { ...site, ...localIp },
   body: form(VALID),
-}, [200, 502]);
+}, [200, 502, 429]);
 await live("POST com corpo de 25 KB (Content-Length honesto)", "/api/submit", {
   method: "POST",
-  headers: urlencoded,
+  headers: { ...site, ...localIp },
   body: form({ ...VALID, mensagem: "x".repeat(25 * 1024) }),
-}, [413, 400]);
+}, [413, 400, 429]);
 {
   // Stream => Transfer-Encoding: chunked, sem Content-Length => o limite de
   // 20 KB do codigo (que so olha o header) nao se aplica. No ambiente real a
@@ -347,7 +365,7 @@ await live("POST com corpo de 25 KB (Content-Length honesto)", "/api/submit", {
   try {
     const res = await realFetch(`${BASE}/api/submit`, {
       method: "POST",
-      headers: urlencoded,
+      headers: { ...site, ...localIp },
       body: stream,
       duplex: "half",
     });
@@ -358,7 +376,7 @@ await live("POST com corpo de 25 KB (Content-Length honesto)", "/api/submit", {
   }
   expectStatus(
     "POST 1 MB em chunked (sem Content-Length) responde com status conhecido",
-    [413, 400, 200, 502],
+    [413, 400, 200, 502, 429],
     status,
     status === 413 ? "edge barrou pelo tamanho" : "chegou ao Worker"
   );

@@ -38,9 +38,15 @@ function rateOk(ip) {
 }
 
 export async function onRequestPost({ request, env }) {
-  // Origin allowlist: bloqueia POST cross-site (spam relay).
+  // Origin obrigatorio: sem ele (curl, bots) a allowlist nao se aplica e o
+  // Worker viraria relay aberto do StaticForms (achado F1 do fuzz). Aceita
+  // a allowlist ou a propria origem da requisicao (dev local, onde o
+  // navegador sempre manda Origin no POST).
   const origin = request.headers.get("Origin");
-  if (origin && !ALLOWED_ORIGINS.has(origin)) return json({ error: "Origem não permitida" }, 403);
+  const allowed =
+    origin &&
+    (ALLOWED_ORIGINS.has(origin) || origin === new URL(request.url).origin);
+  if (!allowed) return json({ error: "Origem não permitida" }, 403);
 
   // Limites antes de tocar no corpo: evita parsear multipart grande em memória.
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";

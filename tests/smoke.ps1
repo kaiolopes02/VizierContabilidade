@@ -62,8 +62,11 @@ Check "X-Frame-Options DENY" "True" ($head -match "X-Frame-Options: DENY")
 Check "COOP" "True" ($head -match "Cross-Origin-Opener-Policy: same-origin")
 
 Write-Host "`n== C. Worker: metodo e CORS ==" -ForegroundColor Cyan
+# Origin valido e obrigatorio no Worker (o navegador sempre envia no POST).
+$origin = @("-H", "Origin: https://www.viziercontabilidade.com.br")
 Check "GET /api/submit -> 405" "405" (Code "/api/submit")
-Check "POST /api/submit sem body -> 400" "400" (Code "/api/submit" "POST")
+Check "POST /api/submit sem body -> 400" "400" (Code "/api/submit" "POST" $origin)
+Check "POST /api/submit sem Origin -> 403" "403" (Code "/api/submit" "POST" @("--data-urlencode", "nome=x"))
 $opt = (curl.exe -s -i -X OPTIONS "$Base/api/submit") -join "`n"
 Check "OPTIONS sem ACAO curinga" "True" ($opt -notmatch "Access-Control-Allow-Origin: \*")
 
@@ -72,21 +75,21 @@ $valid = @("--data-urlencode", "nome=Teste da Silva", "--data-urlencode", "email
   "--data-urlencode", "whatsapp=(11) 98765-4321", "--data-urlencode", "tipo_empresa=MEI",
   "--data-urlencode", "servico=Contabilidade Mensal", "--data-urlencode", "lgpd_consent=on")
 
-Check "POST sem nome -> 400" "400" (Code "/api/submit" "POST" @("--data-urlencode", "email=a@b.com"))
-Check "POST email invalido -> 400" "400" (Code "/api/submit" "POST" @($valid[0..1] + @("--data-urlencode", "email=invalido") + $valid[4..9]))
-Check "POST telefone curto -> 400" "400" (Code "/api/submit" "POST" @($valid[0..3] + @("--data-urlencode", "whatsapp=123") + $valid[6..9]))
-Check "POST sem LGPD -> 400" "400" (Code "/api/submit" "POST" $valid[0..7])
-Check "POST honeypot preenchido -> 400" "400" (Code "/api/submit" "POST" ($valid + @("--data-urlencode", "website=spam")))
-Check "POST body 25KB -> 413" "413" (Code "/api/submit" "POST" @("-H", "Content-Type: application/x-www-form-urlencoded", "--data-binary", "mensagem=$big"))
+Check "POST sem nome -> 400" "400" (Code "/api/submit" "POST" ($origin + @("--data-urlencode", "email=a@b.com")))
+Check "POST email invalido -> 400" "400" (Code "/api/submit" "POST" ($origin + $valid[0..1] + @("--data-urlencode", "email=invalido") + $valid[4..9]))
+Check "POST telefone curto -> 400" "400" (Code "/api/submit" "POST" ($origin + $valid[0..3] + @("--data-urlencode", "whatsapp=123") + $valid[6..9]))
+Check "POST sem LGPD -> 400" "400" (Code "/api/submit" "POST" ($origin + $valid[0..7]))
+Check "POST honeypot preenchido -> 400" "400" (Code "/api/submit" "POST" ($origin + $valid + @("--data-urlencode", "website=spam")))
+Check "POST body 25KB -> 413" "413" (Code "/api/submit" "POST" ($origin + @("-H", "Content-Type: application/x-www-form-urlencoded", "--data-binary", "mensagem=$big")))
 Check "POST Origin nao permitida -> 403" "403" (Code "/api/submit" "POST" ($valid + @("-H", "Origin: https://evil.example")))
-$bad = Body "/api/submit" "POST" $valid
+$bad = Body "/api/submit" "POST" ($origin + $valid)
 Check "POST valido chega ao StaticForms (502 local / 200 com chave real)" "True" ($bad -match "Erro ao enviar|success")
 
 Write-Host "`n== E. Rate limit (10/min por IP) ==" -ForegroundColor Cyan
 # IP proprio: o contador de D nao deve interferir na contagem exata.
 $eIp = "203.0.113.$((Get-Random -Minimum 2 -Maximum 254))"
 $codes = @()
-for ($i = 0; $i -lt 12; $i++) { $codes += (Code "/api/submit" "POST" $valid $eIp) }
+for ($i = 0; $i -lt 12; $i++) { $codes += (Code "/api/submit" "POST" ($origin + $valid) $eIp) }
 Check "10 primeiras passam do rate limit" "True" ($codes[0..9] -notcontains "429")
 Check "11a requisicao bloqueada com 429" "429" ($codes[10])
 Check "12a requisicao bloqueada com 429" "429" ($codes[11])
