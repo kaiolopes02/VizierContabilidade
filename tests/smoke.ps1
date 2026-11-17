@@ -9,6 +9,14 @@ $big = "x" * 25000
 # IP aleatorio por execucao: o rate limit e por isolate/Map, e reusar o IP
 # de um run anterior faria a suite falhar com 429 sem nada quebrado.
 $script:ip = "198.51.100.$((Get-Random -Minimum 2 -Maximum 254))"
+# O header CF-Connecting-IP so e respeitado no wrangler pages dev; na producao o
+# Cloudflare bloqueia (403 error 1000) qualquer request que o envie.
+$script:isLocal = $Base -match "localhost|127\.0\.0\.1"
+
+function IpHeader($ip) {
+  if ($script:isLocal) { return @("-H", "CF-Connecting-IP: $ip") }
+  return @()
+}
 
 function Check($name, $expected, $actual) {
   if ("$actual" -like "$expected*") {
@@ -21,12 +29,12 @@ function Check($name, $expected, $actual) {
 }
 
 function Code($path, $method = "GET", $extra = @(), $ip = $script:ip) {
-  $args = @("-s", "-o", "NUL", "-w", "%{http_code}", "-X", $method, "$Base$path", "-H", "CF-Connecting-IP: $ip") + $extra
+  $args = @("-s", "-o", "NUL", "-w", "%{http_code}", "-X", $method, "$Base$path") + (IpHeader $ip) + $extra
   (& curl.exe @args)
 }
 
 function Body($path, $method = "GET", $extra = @()) {
-  $args = @("-s", "-X", $method, "$Base$path", "-H", "CF-Connecting-IP: $script:ip") + $extra
+  $args = @("-s", "-X", $method, "$Base$path") + (IpHeader $script:ip) + $extra
   (& curl.exe @args) -join "`n"
 }
 
@@ -72,7 +80,7 @@ Check "POST honeypot preenchido -> 400" "400" (Code "/api/submit" "POST" ($valid
 Check "POST body 25KB -> 413" "413" (Code "/api/submit" "POST" @("-H", "Content-Type: application/x-www-form-urlencoded", "--data-binary", "mensagem=$big"))
 Check "POST Origin nao permitida -> 403" "403" (Code "/api/submit" "POST" ($valid + @("-H", "Origin: https://evil.example")))
 $bad = Body "/api/submit" "POST" $valid
-Check "POST valido chega ao StaticForms (502 com chave de teste)" "True" ($bad -match "Erro ao enviar")
+Check "POST valido chega ao StaticForms (502 local / 200 com chave real)" "True" ($bad -match "Erro ao enviar|success")
 
 Write-Host "`n== E. Rate limit (10/min por IP) ==" -ForegroundColor Cyan
 # IP proprio: o contador de D nao deve interferir na contagem exata.
