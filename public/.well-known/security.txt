@@ -5,7 +5,7 @@
 
 Contact: mailto:contato@viziercontabilidade.com.br
 Contact: https://api.whatsapp.com/send?phone=5511997965024
-Policy: https://viziercontabilidade.com.br/pages/politica-de-privacidade.html
+Policy: https://www.viziercontabilidade.com.br/pages/politica-de-privacidade
 Preferred-Languages: pt, en
-Canonical: https://viziercontabilidade.com.br/.well-known/security.txt
+Canonical: https://www.viziercontabilidade.com.br/.well-known/security.txt
 Expires: 2027-05-26T23:59:59.000Z

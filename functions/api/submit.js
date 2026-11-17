@@ -1,152 +1,139 @@
-// ponytail: Cloudflare Pages Function — só executa na Cloudflare ou `wrangler pages dev`.
-// Em local dev (Live Server / localhost), este Worker NÃO está rodando; o frontend
-// (main.js) detecta o ambiente e pula direto para api.staticforms.xyz/submit.
+// Cloudflare Pages Function — só executa na Cloudflare ou em `wrangler pages dev`.
+// O frontend (public/js/main.js) usa sempre /api/submit; a accessKey fica só aqui (secret).
 
-// ponytail: rate limiter simples por IP usando Map (sem KV). Zera quando o Worker
-// cold-starta (~minutos). Suficiente para abuse básico; upgrade para Cloudflare
-// Rate Limiting Rules se escala.
+const STATICFORMS_ENDPOINT = "https://api.staticforms.xyz/submit";
+const ALLOWED_ORIGINS = new Set([
+  "https://www.viziercontabilidade.com.br",
+  "https://viziercontabilidade.com.br"
+]);
+
+const MAX_BYTES = 20_000;
+const MAX_FIELD = {
+  nome: 120, email: 254, telefone: 20, tipo_empresa: 40, servico: 80,
+  mensagem: 4000, cnpj: 20, contador_atual: 120, assunto: 160
+};
+const REQUIRED = ["nome", "email", "telefone", "tipo_empresa", "servico", "lgpd_consent"];
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+const json = (body, status = 200) => new Response(JSON.stringify(body), {
+  status,
+  headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
+});
+
+// Rate limit por isolate (Map não é compartilhado entre instâncias).
+// shortcut: 10 req/min por isolate, sem KV — suficiente para abuso básico.
+// Em escala, configure WAF > Rate limiting rules em POST /api/submit.
+const MAX_IPS = 5000;
 const RATE_LIMITS = new Map(); // IP -> {count, resetAt}
 
-// ponytail: limpeza preguiçosa do rate limit map — remove entradas expiradas a cada request.
-// Substitui setInterval no escopo global (proibido no Workers runtime: "Disallowed
-// operation called within global scope"). O Map não é compartilhado entre instâncias;
-// cold-start zera naturalmente.
-function cleanupRateLimits() {
+function rateOk(ip) {
   const now = Date.now();
-  for (const [ip, entry] of RATE_LIMITS) {
-    if (now >= entry.resetAt) RATE_LIMITS.delete(ip);
+  const entry = RATE_LIMITS.get(ip);
+  if (!entry || now >= entry.resetAt) {
+    if (RATE_LIMITS.size >= MAX_IPS) RATE_LIMITS.clear(); // teto duro: sem varredura O(n)
+    RATE_LIMITS.set(ip, { count: 1, resetAt: now + 60_000 });
+    return true;
   }
+  return ++entry.count <= 10;
 }
 
-export async function onRequestPost(context) {
-  const { request, env } = context;
+export async function onRequestPost({ request, env }) {
+  // Origin allowlist: bloqueia POST cross-site (spam relay).
+  const origin = request.headers.get("Origin");
+  if (origin && !ALLOWED_ORIGINS.has(origin)) return json({ error: "Origem não permitida" }, 403);
 
-  // Lazy cleanup: remove entradas expiradas a cada request
-  cleanupRateLimits();
-
-  try {
-    const formData = await request.formData();
-
-    // Rate limiting: 10 requests per 60s per IP
-    const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-    const now = Date.now();
-    const entry = RATE_LIMITS.get(ip);
-    if (entry && now < entry.resetAt && entry.count >= 10) {
-      return new Response(JSON.stringify({ error: "Muitas solicitações. Aguarde um momento." }), {
-        status: 429,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-    if (!entry || now >= entry.resetAt) {
-      RATE_LIMITS.set(ip, { count: 1, resetAt: now + 60000 });
-    } else {
-      entry.count++;
-    }
-
-    // Server-side honeypot check
-    const honeypot = formData.get("website");
-    if (honeypot && honeypot.trim() !== "") {
-      return new Response(JSON.stringify({ error: "Spam detectado" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-
-    // Remove honeypot before forwarding
-    formData.delete("website");
-
-    // FIX MOBILE/COMPAT: mapeia whatsapp -> telefone
-    const telefone = formData.get("telefone") || formData.get("whatsapp");
-    if (telefone) {
-      formData.set("telefone", telefone);
-      formData.delete("whatsapp");
-    }
-
-    // Validate required fields
-    const required = ["nome", "email", "telefone", "servico", "lgpd_consent"];
-    for (const field of required) {
-      const value = formData.get(field);
-      if (!value || value.trim() === "") {
-        return new Response(JSON.stringify({ error: `Campo obrigatório: ${field}` }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" }
-        });
-      }
-    }
-
-    // Validate LGPD consent
-    const lgpd = formData.get("lgpd_consent");
-    if (lgpd !== "true" && lgpd !== "on" && lgpd !== true) {
-      return new Response(JSON.stringify({ error: "Consentimento LGPD é obrigatório" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-
-    // Customiza subject do email
-    const assuntoSubject = (formData.get("assunto") || "").trim() || "Contato via site Vizier";
-    const nomeSubject = (formData.get("nome") || "").trim();
-    formData.set("subject", nomeSubject ? `${assuntoSubject} — ${nomeSubject}` : assuntoSubject);
-
-    // Forward to StaticForms
-    const FORMSPREE_ENDPOINT = "https://api.staticforms.xyz/submit";
-
-    // FIX SECURITY: accessKey vem de variável de ambiente do Worker,
-    // nunca exposta no client-side. Ver wrangler.jsonc -> vars.STATICFORMS_ACCESS_KEY.
-    // FIX EMAIL: hard fail se env var nao configurada — antes o Worker encaminhava
-    // sem accessKey e o StaticForms rejeitava silenciosamente (email nunca chegava).
-    const accessKey = env.STATICFORMS_ACCESS_KEY;
-    if (!accessKey) {
-      console.error("[Worker] STATICFORMS_ACCESS_KEY env var nao configurada");
-      return new Response(JSON.stringify({ error: "Configuração do servidor incompleta" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-    formData.set("accessKey", accessKey);
-
-    // FIX SECURITY: removido log de PII. Apenas metadados.
-    console.log("[Worker] Forwarding to StaticForms, field count:", [...formData.entries()].length);
-
-    const response = await fetch(FORMSPREE_ENDPOINT, {
-      method: "POST",
-      body: formData,
-      headers: {
-        "Accept": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error("[Worker] StaticForms error:", response.status, text.substring(0, 100));
-      return new Response(JSON.stringify({ error: "Erro ao enviar formulário" }), {
-        status: 502,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" }
-    });
-
-  } catch (error) {
-    console.error("[Worker] Erro interno:", error.message);
-    return new Response(JSON.stringify({ error: "Erro interno do servidor" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+  // Limites antes de tocar no corpo: evita parsear multipart grande em memória.
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  if (!rateOk(ip)) return json({ error: "Muitas solicitações. Aguarde um momento." }, 429);
+  if (Number(request.headers.get("Content-Length") || 0) > MAX_BYTES) {
+    return json({ error: "Requisição muito grande" }, 413);
   }
+
+  let form;
+  try {
+    form = await request.formData();
+  } catch {
+    return json({ error: "Formato inválido" }, 400);
+  }
+
+  // Honeypot: resposta genérica para não revelar a detecção.
+  if (String(form.get("website") || "").trim() !== "") {
+    return json({ error: "Spam detectado" }, 400);
+  }
+  form.delete("website");
+
+  // Compat: o front envia o telefone como "whatsapp" no modal.
+  const telefone = form.get("telefone") || form.get("whatsapp");
+  if (telefone) {
+    form.set("telefone", telefone);
+    form.delete("whatsapp");
+  }
+
+  for (const field of REQUIRED) {
+    const value = form.get(field);
+    if (typeof value !== "string" || !value.trim()) {
+      return json({ error: `Campo obrigatório: ${field}` }, 400);
+    }
+  }
+
+  if (!EMAIL.test(String(form.get("email")).trim())) return json({ error: "E-mail inválido" }, 400);
+
+  const digits = String(form.get("telefone")).replace(/\D/g, "");
+  if (digits.length !== 10 && digits.length !== 11) return json({ error: "Telefone inválido" }, 400);
+
+  if (!["true", "on"].includes(String(form.get("lgpd_consent")))) {
+    return json({ error: "Consentimento LGPD é obrigatório" }, 400);
+  }
+
+  for (const [field, max] of Object.entries(MAX_FIELD)) {
+    const value = form.get(field);
+    if (value != null && String(value).length > max) {
+      return json({ error: `Campo inválido: ${field}` }, 400);
+    }
+  }
+
+  // Subject em uma linha: descarta CRLF (header injection) e limita tamanho.
+  const oneLine = (value) => String(value || "").replace(/[\r\n]+/g, " ").trim().slice(0, 160);
+  const subject = oneLine(form.get("assunto")) || oneLine(form.get("servico")) || "Contato via site Vizier";
+  form.set("subject", `${subject} — ${oneLine(form.get("nome"))}`);
+
+  const accessKey = env.STATICFORMS_ACCESS_KEY;
+  if (!accessKey) {
+    console.error("[Worker] STATICFORMS_ACCESS_KEY não configurada");
+    return json({ error: "Configuração do servidor incompleta" }, 500);
+  }
+  form.set("accessKey", accessKey);
+
+  console.log("[Worker] Forwarding to StaticForms, field count:", [...form.keys()].length);
+
+  let response;
+  try {
+    response = await fetch(STATICFORMS_ENDPOINT, {
+      method: "POST",
+      body: form,
+      headers: { "Accept": "application/json" }
+    });
+  } catch (error) {
+    console.error("[Worker] Falha de rede ao StaticForms:", error.message);
+    return json({ error: "Erro ao enviar formulário" }, 502);
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error("[Worker] StaticForms error:", response.status, text.slice(0, 100));
+    return json({ error: "Erro ao enviar formulário" }, 502);
+  }
+
+  return json({ success: true });
+}
+
+export async function onRequestGet() {
+  return json({ error: "Método não permitido" }, 405);
 }
 
 export async function onRequestOptions() {
   return new Response(null, {
     status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Max-Age": "86400"
-    }
+    headers: { "Allow": "POST, OPTIONS", "Access-Control-Allow-Methods": "POST, OPTIONS" }
   });
 }

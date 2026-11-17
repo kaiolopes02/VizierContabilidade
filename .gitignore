@@ -2,3 +2,7 @@
 .wrangler/
 _worker.bundle
 node_modules/
+.codegraph/
+.agents/
+security-audit-out/
+.dev.vars

@@ -9,8 +9,8 @@
   --primary: #022742;
   --primary-dark: #011a2e;
   --primary-light: #1a5276;
-  --secondary: #10b981;
-  --secondary-dark: #059669;
+  --secondary: #047857;
+  --secondary-dark: #065f46;
   --accent: #f59e0b;
   --accent-light: #fbbf24;
 
@@ -19,7 +19,7 @@
   --neutral-dark: #64748b;
   --text-primary: #1e293b;
   --text-secondary: #475569;
-  --text-light: #94a3b8;
+  --text-light: #64748b;
   --white: #ffffff;
 
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -632,13 +632,16 @@ p {
   background: var(--white);
   padding: 2rem;
   transform: translateX(100%);
-  transition: transform 0.3s ease;
+  visibility: hidden;
+  transition: transform 0.3s ease, visibility 0.3s ease;
   z-index: 1002;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .nav-mobile.active {
   transform: translateX(0);
+  visibility: visible;
 }
 
 .nav-mobile a {
@@ -1090,42 +1093,6 @@ p {
   font-weight: 500;
 }
 
-/*
-/* App */
-.app-section .about-grid {
-  direction: rtl;
-}
-
-.app-section .about-content {
-  direction: ltr;
-}
-
-.app-badges {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.app-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  background: var(--text-primary);
-  color: var(--white);
-  border-radius: var(--radius);
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: var(--transition);
-}
-
-.app-badge:hover {
-  background: var(--primary);
-  transform: translateY(-2px);
-}
-
-*/
 /* Testimonials */
 .testimonials-grid {
   margin-top: 2rem;
@@ -1494,9 +1461,6 @@ p {
   opacity: 0;
   transform: translateY(30px);
   transition: opacity 0.65s ease, transform 0.65s ease;
-  will-change: opacity, transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 .animate.visible {
@@ -1531,11 +1495,13 @@ p {
   padding: 1rem;
   z-index: 1999;
   transform: translateY(100%);
-  transition: transform 0.4s ease;
+  visibility: hidden;
+  transition: transform 0.4s ease, visibility 0.4s ease;
 }
 
 .cookie-banner.active {
   transform: translateY(0);
+  visibility: visible;
 }
 
 .cookie-content {
@@ -1555,7 +1521,7 @@ p {
 }
 
 .cookie-content a {
-  color: var(--secondary);
+  color: #6ee7b7;
   text-decoration: underline;
 }
 
@@ -1712,4 +1678,13 @@ p {
     .form-input, .form-select, .form-textarea {
         font-size: 16px !important; 
     }
+
+    /* Hero sem altura fixa: em telas baixas (SE/Android compacto) o conteudo
+       estourava 100dvh e o overflow:hidden cortava a ultima linha. */
+    .hero {
+        min-height: 0;
+        padding: calc(var(--header-height) + 2.5rem) 0 3rem;
+        overflow: visible;
+    }
+    .section { padding: 2.5rem 0; }
 }

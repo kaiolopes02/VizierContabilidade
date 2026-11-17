@@ -55,6 +55,15 @@
     return '';
   };
 
+  const formatCnpj = (v) => {
+    const n = v.replace(/\D/g, '').slice(0, 14);
+    if (n.length > 12) return `${n.slice(0,2)}.${n.slice(2,5)}.${n.slice(5,8)}/${n.slice(8,12)}-${n.slice(12)}`;
+    if (n.length > 8) return `${n.slice(0,2)}.${n.slice(2,5)}.${n.slice(5,8)}/${n.slice(8)}`;
+    if (n.length > 5) return `${n.slice(0,2)}.${n.slice(2,5)}.${n.slice(5)}`;
+    if (n.length > 2) return `${n.slice(0,2)}.${n.slice(2)}`;
+    return n;
+  };
+
   /* ---------- Header / Footer ---------- */
   const initComponents = () => {
     if ($('#header')) return;
@@ -62,16 +71,16 @@
     const headerHTML = `
       <header class="header" id="header" role="banner">
         <div class="container">
-          <a href="/index.html" class="logo" aria-label="Vizier Contabilidade - Página inicial" data-i18n-aria-label="nav.paginaInicial">
+          <a href="/" class="logo" aria-label="Vizier Contabilidade - Página inicial" data-i18n-aria-label="nav.paginaInicial">
             <img src="/assets/images/Vizier.png" alt="" height="32" style="height:32px; width:auto; border-radius:8px; object-fit:contain;">
             ${CONFIG.nomeCurto}<span>.</span>
           </a>
           <nav class="nav-desktop" role="navigation" aria-label="Navegação principal" data-i18n-aria-label="nav.navPrincipal">
-            <a href="/index.html#servicos" data-i18n="nav.servicos">Serviços</a>
-            <a href="/index.html#sobre" data-i18n="nav.sobre">Sobre</a>
-            <a href="/index.html#processo" data-i18n="nav.processo">Processo</a>
-            <a href="/index.html#planos" data-i18n="nav.planos">Planos</a>
-            <a href="/pages/faq.html" data-i18n="nav.faq">FAQ</a>
+            <a href="/#servicos" data-i18n="nav.servicos">Serviços</a>
+            <a href="/#sobre" data-i18n="nav.sobre">Sobre</a>
+            <a href="/#processo" data-i18n="nav.processo">Processo</a>
+            <a href="/#planos" data-i18n="nav.planos">Planos</a>
+            <a href="/pages/faq" data-i18n="nav.faq">FAQ</a>
           </nav>
           <div class="nav-cta">
             <a href="https://api.whatsapp.com/send?phone=${CONFIG.whatsapp}&text=Olá! Vim pelo site e gostaria de um orçamento.${CONFIG.utm}" class="btn btn-whatsapp btn-sm" target="_blank" rel="noopener noreferrer" data-i18n="common.whatsapp" data-wa-msg="wa.orcamento">WhatsApp</a>
@@ -83,12 +92,12 @@
         </div>
       </header>
       <nav class="nav-mobile" id="nav-mobile" role="navigation" aria-label="Menu mobile" data-i18n-aria-label="nav.menuMobile">
-        <a href="/index.html#servicos" data-i18n="nav.servicos">Serviços</a>
-        <a href="/index.html#sobre" data-i18n="nav.sobre">Sobre</a>
-        <a href="/index.html#processo" data-i18n="nav.processo">Processo</a>
-        <a href="/index.html#planos" data-i18n="nav.planos">Planos</a>
-        <a href="/pages/faq.html" data-i18n="nav.faq">FAQ</a>
-        <a href="/pages/troque-de-contador.html" data-i18n="nav.troqueContador">Troque de Contador</a>
+        <a href="/#servicos" data-i18n="nav.servicos">Serviços</a>
+        <a href="/#sobre" data-i18n="nav.sobre">Sobre</a>
+        <a href="/#processo" data-i18n="nav.processo">Processo</a>
+        <a href="/#planos" data-i18n="nav.planos">Planos</a>
+        <a href="/pages/faq" data-i18n="nav.faq">FAQ</a>
+        <a href="/pages/troque-de-contador" data-i18n="nav.troqueContador">Troque de Contador</a>
         <a href="${CONFIG.instagramUrl}" target="_blank" rel="noopener noreferrer" data-i18n="nav.instagram">Instagram</a>
         <a href="https://api.whatsapp.com/send?phone=${CONFIG.whatsapp}&text=Olá! Vim pelo site e gostaria de um orçamento.${CONFIG.utm}" class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer" data-i18n="common.falarWhatsapp" data-wa-msg="wa.orcamento">Falar no WhatsApp</a>
         <button type="button" class="btn btn-primary" data-modal="orcamento" data-i18n="common.solicitarOrcamento">Solicitar Orçamento</button>
@@ -113,17 +122,17 @@
             </div>
             <div class="footer-links">
               <h4 class="footer-title" data-i18n="nav.servicos">Serviços</h4>
-              <a href="/pages/abertura-de-empresa.html" data-i18n="svc.abertura.title">Abertura de Empresa</a>
-              <a href="/pages/contabilidade-mensal.html" data-i18n="svc.contabilidade.title">Contabilidade Mensal</a>
-              <a href="/pages/folha-de-pagamento.html" data-i18n="svc.folha.title">Folha de Pagamento</a>
-              <a href="/pages/declaracoes-fiscais.html" data-i18n="svc.declaracoes.title">Declarações Fiscais</a>
+              <a href="/pages/abertura-de-empresa" data-i18n="svc.abertura.title">Abertura de Empresa</a>
+              <a href="/pages/contabilidade-mensal" data-i18n="svc.contabilidade.title">Contabilidade Mensal</a>
+              <a href="/pages/folha-de-pagamento" data-i18n="svc.folha.title">Folha de Pagamento</a>
+              <a href="/pages/declaracoes-fiscais" data-i18n="svc.declaracoes.title">Declarações Fiscais</a>
             </div>
             <div class="footer-links">
               <h4 class="footer-title" data-i18n="foot.institucional">Institucional</h4>
-              <a href="/index.html#sobre" data-i18n="foot.sobreNos">Sobre Nós</a>
-              <a href="/pages/faq.html" data-i18n="nav.faq">FAQ</a>
-              <a href="/pages/troque-de-contador.html" data-i18n="nav.troqueContador">Troque de Contador</a>
-              <a href="/pages/planos.html" data-i18n="nav.planos">Planos</a>
+              <a href="/#sobre" data-i18n="foot.sobreNos">Sobre Nós</a>
+              <a href="/pages/faq" data-i18n="nav.faq">FAQ</a>
+              <a href="/pages/troque-de-contador" data-i18n="nav.troqueContador">Troque de Contador</a>
+              <a href="/pages/planos" data-i18n="nav.planos">Planos</a>
             </div>
             <div class="footer-contact">
               <h4 class="footer-title" data-i18n="foot.contato">Contato</h4>
@@ -144,13 +153,13 @@
           <div class="footer-bottom">
             <p>© ${new Date().getFullYear()} ${CONFIG.empresa}. <span data-i18n="foot.direitos">Todos os direitos reservados.</span></p>
             <div class="footer-legal">
-              <a href="/pages/politica-de-privacidade.html" data-i18n="foot.privacidade">Política de Privacidade (LGPD)</a>
-              <a href="/pages/termos-de-uso.html" data-i18n="foot.termos">Termos de Uso</a>
+              <a href="/pages/politica-de-privacidade" data-i18n="foot.privacidade">Política de Privacidade (LGPD)</a>
+              <a href="/pages/termos-de-uso" data-i18n="foot.termos">Termos de Uso</a>
             </div>
           </div>
           <div class="footer-credit" style="text-align:center; padding:1rem 0; border-top:1px solid rgba(255,255,255,0.1);">
             <p style="color:rgba(255,255,255,0.5); font-size:0.8rem; margin:0;">
-              <span data-i18n="foot.desenvolvido">Site desenvolvido por</span> <a href="https://www.linkedin.com/in/kaio-lopes-552817275" target="_blank" rel="noopener noreferrer" style="color:var(--secondary); text-decoration:none; font-weight:600;">Kaio Lopes</a>
+              <span data-i18n="foot.desenvolvido">Site desenvolvido por</span> <a href="https://www.linkedin.com/in/kaio-lopes-552817275" target="_blank" rel="noopener noreferrer" style="color:#6ee7b7; text-decoration:none; font-weight:600;">Kaio Lopes</a>
             </p>
           </div>
         </div>
@@ -237,29 +246,59 @@
 
   /* ---------- Accordion ---------- */
   const initAccordion = () => {
-    $$('.faq-item').forEach(item => {
+    $$('.faq-item').forEach((item, index) => {
       const q = item.querySelector('.faq-question');
-      if (!q) return;
+      const panel = item.querySelector('.faq-answer');
+      if (!q || !panel) return;
+
+      panel.id = panel.id || `faq-panel-${index + 1}`;
+      q.setAttribute('aria-controls', panel.id);
+
+      const setOpen = (open) => {
+        item.classList.toggle('active', open);
+        q.setAttribute('aria-expanded', String(open));
+        // inert (nao hidden): tira da arvore de acessibilidade sem matar a transicao.
+        panel.inert = !open;
+      };
 
       q.addEventListener('click', () => {
-        const isActive = item.classList.contains('active');
+        const willOpen = !item.classList.contains('active');
         $$('.faq-item').forEach(i => {
-          i.classList.remove('active');
           const qq = i.querySelector('.faq-question');
+          const pp = i.querySelector('.faq-answer');
+          i.classList.remove('active');
           if (qq) qq.setAttribute('aria-expanded', 'false');
+          if (pp) pp.inert = true;
         });
-        if (!isActive) {
-          item.classList.add('active');
-          q.setAttribute('aria-expanded', 'true');
-        }
+        if (willOpen) setOpen(true);
       });
-      q.setAttribute('aria-expanded', 'false');
+
+      setOpen(false);
     });
   };
 
   /* ---------- Modal ---------- */
   const initModal = () => {
     let overlay = null;
+    let lastFocus = null;
+    let prevOverflow = '';
+
+    const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+    const setBackgroundInert = (on) => {
+      document.querySelectorAll('body > *:not(.modal-overlay)').forEach(el => { el.inert = on; });
+    };
+
+    // Mantem o Tab dentro do dialogo.
+    const trapFocus = (e) => {
+      if (e.key !== 'Tab' || !overlay) return;
+      const items = [...overlay.querySelectorAll(FOCUSABLE)].filter(el => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
 
     const create = () => {
       const div = document.createElement('div');
@@ -272,20 +311,7 @@
           <button type="button" class="modal-close" aria-label="Fechar modal" data-i18n-aria-label="modal.fechar">&times;</button>
           <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
           <p class="modal-subtitle" id="modal-subtitle" data-i18n="modal.subtitulo">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
-          <!-- FIX MOBILE: action aponta para o Worker (same-origin, liberado pelo CSP).
-               Antes apontava para api.staticforms.xyz, ausente da diretiva form-action do
-               CSP: em mobile, se o submit nativo disparasse antes do JS, era bloqueado
-               silenciosamente. Agora qualquer fallback nativo tambem e same-origin. -->
-          <!-- FIX MOBILE (2026-07-02): Race-condition entre script defer + conexao lenta.
-                Em 3G/4G o download do main.js pode demorar 5-8s. O usuario clica no botao
-                "Solicitar Orcamento" enquanto o JS ainda carrega — o listener click (data-modal)
-                nao esta registrado ainda, entao o modal NAO abre. O usuario nao ve nada acontecer.
-                Solucao: script inline sincrono ANTES do defer script (ver index.html).
-                Alem disso, blindamos o form inline com onsubmit="return false" para que
-                MESMO se Rocket Loader / defer atrasarem a execucao do JS, o submit nativo
-                nunca dispare um POST que navegaria para uma pagina JSON pura (falha silenciosa).
-                O handler JS depois chama explicitamente o fetch. -->
-           <form id="form-orcamento" action="/api/submit" method="POST" onsubmit="return false">            <div class="form-honeypot" aria-hidden="true">
+          <form id="form-orcamento" action="/api/submit" method="POST">            <div class="form-honeypot" aria-hidden="true">
               <input type="text" name="website" tabindex="-1" autocomplete="off">
             </div>
             <div class="form-group">
@@ -334,22 +360,17 @@
               <textarea id="modal-mensagem" name="mensagem" class="form-textarea" placeholder="Conte-nos mais sobre sua necessidade..." data-i18n-placeholder="modal.mensagemPh"></textarea>
             </div>
             <div class="form-group">
-              <label class="form-label" for="assunto-usuario" data-i18n="modal.assunto">Assunto *</label>
-              <input type="text" id="assunto-usuario" name="assunto" class="form-input" required placeholder="Assunto da mensagem" data-i18n-placeholder="modal.assuntoPh">
-              <span class="form-error" data-i18n="modal.assuntoErro">Por favor, informe o assunto.</span>
-            </div>
-            <div class="form-group">
               <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="lgpd-consent" name="lgpd_consent" required>
                 <label class="form-check-label" for="lgpd-consent">
-                  <span data-i18n="modal.lgpdPre">Declaro que li e concordo com a</span> <a href="/pages/politica-de-privacidade.html" target="_blank" rel="noopener" data-i18n="modal.lgpdPolitica">Política de Privacidade</a> <span data-i18n="modal.lgpdE">e com o</span> <a href="/pages/termos-de-uso.html" target="_blank" rel="noopener" data-i18n="modal.lgpdTermos">Termos de Uso</a> <span data-i18n="modal.lgpdPos">da Vizier Contabilidade.</span>
+                  <span data-i18n="modal.lgpdPre">Declaro que li e concordo com a</span> <a href="/pages/politica-de-privacidade" target="_blank" rel="noopener" data-i18n="modal.lgpdPolitica">Política de Privacidade</a> <span data-i18n="modal.lgpdE">e com o</span> <a href="/pages/termos-de-uso" target="_blank" rel="noopener" data-i18n="modal.lgpdTermos">Termos de Uso</a> <span data-i18n="modal.lgpdPos">da Vizier Contabilidade.</span>
                 </label>
                 <span class="form-error" data-i18n="modal.lgpdErro">Você precisa aceitar a Política de Privacidade e os Termos de Uso.</span>
               </div>
             </div>
             <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Enviar Solicitação</button>
             <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--text-light);">
-              <span data-i18n="modal.notaPre">Ao enviar, você concorda com nossa</span> <a href="/pages/politica-de-privacidade.html" style="color:var(--primary); text-decoration:underline;" data-i18n="modal.notaLink">Política de Privacidade</a>.
+              <span data-i18n="modal.notaPre">Ao enviar, você concorda com nossa</span> <a href="/pages/politica-de-privacidade" style="color:var(--primary); text-decoration:underline;" data-i18n="modal.notaLink">Política de Privacidade</a>.
             </p>
           </form>
           <div class="form-success" id="form-success" style="display:none; text-align:center; padding:2rem 1rem;">
@@ -360,11 +381,13 @@
         </div>
       `;
       document.body.appendChild(div);
+      div.addEventListener('keydown', trapFocus);
       return div;
     };
 
     const open = (title = tr('modal.titulo', 'Solicitação de Orçamento'), isTroca = false) => {
       if (!overlay) overlay = create();
+      lastFocus = document.activeElement;
       // Set the title
       const titleEl = overlay.querySelector('#modal-title');
       if (titleEl) titleEl.textContent = title;
@@ -398,7 +421,9 @@
       }
       
       overlay.classList.add('active');
+      prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      setBackgroundInert(true);
       setTimeout(() => {
         const inp = overlay.querySelector('#modal-nome');
         if (inp) inp.focus();
@@ -425,8 +450,17 @@
       const modalSubtitle = overlay.querySelector('#modal-subtitle');
       if (modalTitle) modalTitle.style.display = '';
       if (modalSubtitle) modalSubtitle.style.display = '';
+
+      // Erro de envio nao pode reaparecer no proximo uso do modal.
+      const errEl = overlay.querySelector('#form-submit-error');
+      if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+      const submitBtn = overlay.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.classList.remove('loading');
+
       overlay.classList.remove('active');
-      document.body.style.overflow = '';
+      setBackgroundInert(false);
+      document.body.style.overflow = prevOverflow;
+      if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
     };
 
     document.addEventListener('click', (e) => {
@@ -469,22 +503,25 @@
 
   /* ---------- Form Handler (mailto formatado) ---------- */
   const initFormHandler = () => {
+    // Reescrever o valor joga o cursor para o fim; reposiciona pela diferenca de tamanho.
+    const mask = (el, maxDigits, formatter) => {
+      const pos = el.selectionStart;
+      const before = el.value.length;
+      el.value = formatter(el.value.replace(/\D/g, '').slice(0, maxDigits));
+      if (el.selectionStart !== null) {
+        const target = Math.max(0, pos + el.value.length - before);
+        el.setSelectionRange(target, target);
+      }
+    };
+
     document.addEventListener('input', (e) => {
-      if (e.target.matches('input[type="tel"], #whatsapp-troca, #whatsapp, #modal-whatsapp')) {
-        e.target.value = formatPhone(e.target.value);
-      }
-      if (e.target.matches('#cnpj-troca')) {
-        let v = e.target.value.replace(/\D/g, '').slice(0, 14);
-        if (v.length > 12) e.target.value = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8,12)}-${v.slice(12)}`;
-        else if (v.length > 8) e.target.value = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8)}`;
-        else if (v.length > 5) e.target.value = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5)}`;
-        else if (v.length > 2) e.target.value = `${v.slice(0,2)}.${v.slice(2)}`;
-      }
+      if (e.target.matches('input[type="tel"]')) mask(e.target, 11, formatPhone);
+      if (e.target.matches('[name="cnpj"]')) mask(e.target, 14, formatCnpj);
     });
 
     document.addEventListener('submit', (e) => {
       const form = e.target;
-      if (!form.matches('#form-orcamento, #form-troca')) return;
+      if (!form.matches('#form-orcamento')) return;
 
       // FIX MOBILE: preventDefault() sincrono e imediato. Em mobile (CPUs lentas +
       // script com defer), o submit nativo pode competir com o fetch assincrono e
@@ -514,7 +551,6 @@
       const whatsapp = getVal('whatsapp');
       const tipoEmpresa = getVal('tipo_empresa');
       const servico = getVal('servico');
-      const assunto = getVal('assunto');
 
       let valid = true;
 
@@ -540,10 +576,6 @@
         form.querySelector('[name="servico"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
-      if (form.querySelector('[name="assunto"]') && !assunto) {
-        form.querySelector('[name="assunto"]')?.closest('.form-group')?.classList.add('error');
-        valid = false;
-      }
       // LGPD consent validation (required checkbox)
       const lgpdConsent = form.querySelector('[name="lgpd_consent"]')?.checked || false;
       if (!lgpdConsent) {
@@ -555,9 +587,6 @@
         e.preventDefault();
         return;
       }
-
-      // Always prevent default submission and use AJAX
-      e.preventDefault();
 
       // Build FormData
       const formData = new FormData(form);
@@ -682,16 +711,6 @@
           showSubmitError(msg);
         });
     });
-
-    // FIX MOBILE (2026-07-02): Notifica o script inline sincrono (index.html)
-    // que o listener submit do main.js esta ativo. A partir deste momento, o
-    // guardiao inline para de bloquear submits e deixa o main.js assumir o
-    // controle total com fetch assincrono. Sem esta notificacao, o guardiao
-    // inline continuaria bloqueando submits mesmo apos o main.js carregar,
-    // causando um deadlock: nem submit nativo, nem fetch AJAX funcionariam.
-    if (typeof window.__vizierFormReady === 'function') {
-      window.__vizierFormReady();
-    }
   };
 
   /* ---------- Counters ---------- */
@@ -743,7 +762,7 @@
     banner.className = 'cookie-banner';
     banner.innerHTML = `
       <div class="cookie-content container">
-        <p><span data-i18n="cookie.textoPre">Utilizamos cookies para melhorar sua experiência. Ao continuar navegando, você concorda com nossa</span> <a href="/pages/politica-de-privacidade.html" data-i18n="cookie.politica">Política de Privacidade</a> <span data-i18n="cookie.textoPos">e uso de cookies essenciais.</span></p>
+        <p><span data-i18n="cookie.textoPre">Utilizamos cookies para melhorar sua experiência. Ao continuar navegando, você concorda com nossa</span> <a href="/pages/politica-de-privacidade" data-i18n="cookie.politica">Política de Privacidade</a> <span data-i18n="cookie.textoPos">e uso de cookies essenciais.</span></p>
         <div class="cookie-buttons">
           <button type="button" class="btn btn-sm btn-secondary" id="cookie-reject" data-i18n="cookie.recusar">Recusar</button>
           <button type="button" class="btn btn-sm btn-primary" id="cookie-accept" data-i18n="cookie.aceitar">Aceitar</button>
