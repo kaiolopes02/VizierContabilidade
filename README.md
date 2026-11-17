@@ -44,6 +44,14 @@ Com o servidor acima rodando, em outro terminal:
 powershell -NoProfile -ExecutionPolicy Bypass -File tests/smoke.ps1
 ```
 
+O fuzz do formulário (validação, encaminhamento e bytes crus em socket) roda
+com:
+
+```powershell
+node tests/fuzz.mjs                                              # local
+node tests/fuzz.mjs https://www.viziercontabilidade.com.br      # produção
+```
+
 ## Deploy
 
 Publicado no Cloudflare Pages a partir da branch `main`. O diretório de saída é
