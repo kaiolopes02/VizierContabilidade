@@ -1,22 +1,11 @@
-# Smoke tests do site + Worker. Uso:
-#   1) npx wrangler pages dev public --port 8788 --ip 127.0.0.1   (em outro terminal)
+# Smoke tests do site publicado (assets, headers e URLs).
+# Uso:
+#   1) npx wrangler pages dev --port 8788 --ip 127.0.0.1   (em outro terminal)
 #   2) powershell -File tests/smoke.ps1
 param([string]$Base = "http://127.0.0.1:8788")
 
 $script:pass = 0
 $script:fail = 0
-$big = "x" * 25000
-# IP aleatorio por execucao: o rate limit e por isolate/Map, e reusar o IP
-# de um run anterior faria a suite falhar com 429 sem nada quebrado.
-$script:ip = "198.51.100.$((Get-Random -Minimum 2 -Maximum 254))"
-# O header CF-Connecting-IP so e respeitado no wrangler pages dev; na producao o
-# Cloudflare bloqueia (403 error 1000) qualquer request que o envie.
-$script:isLocal = $Base -match "localhost|127\.0\.0\.1"
-
-function IpHeader($ip) {
-  if ($script:isLocal) { return @("-H", "CF-Connecting-IP: $ip") }
-  return @()
-}
 
 function Check($name, $expected, $actual) {
   if ("$actual" -like "$expected*") {
@@ -28,13 +17,13 @@ function Check($name, $expected, $actual) {
   }
 }
 
-function Code($path, $method = "GET", $extra = @(), $ip = $script:ip) {
-  $args = @("-s", "-o", "NUL", "-w", "%{http_code}", "-X", $method, "$Base$path") + (IpHeader $ip) + $extra
+function Code($path, $method = "GET", $extra = @()) {
+  $args = @("-s", "-o", "NUL", "-w", "%{http_code}", "-X", $method, "$Base$path") + $extra
   (& curl.exe @args)
 }
 
 function Body($path, $method = "GET", $extra = @()) {
-  $args = @("-s", "-X", $method, "$Base$path") + (IpHeader $script:ip) + $extra
+  $args = @("-s", "-X", $method, "$Base$path") + $extra
   (& curl.exe @args) -join "`n"
 }
 
@@ -45,6 +34,7 @@ Check "GET /security-audit-out/REPORT.md (404)" "404" (Code "/security-audit-out
 Check "GET /nao-existe.html (404)" "404" (Code "/nao-existe.html")
 Check "GET /_headers (404)" "404" (Code "/_headers")
 Check "GET /.dev.vars (404)" "404" (Code "/.dev.vars")
+Check "GET /api/submit (Worker removido -> 404)" "404" (Code "/api/submit")
 Check "GET /robots.txt" "200" (Code "/robots.txt")
 Check "GET /sitemap.xml" "200" (Code "/sitemap.xml")
 Check "GET /nao-existe.html serve a pagina 404 customizada" "True" ((Body "/nao-existe.html") -match "Erro 404")
@@ -57,44 +47,12 @@ Check "GET /.well-known/security.txt" "200" (Code "/.well-known/security.txt")
 Write-Host "`n== B. Headers de seguranca ==" -ForegroundColor Cyan
 $head = (curl.exe -s -I "$Base/") -join "`n"
 Check "CSP sem script unsafe-inline" "True" ($head -notmatch "script-src[^;]*'unsafe-inline'")
+Check "CSP libera Web3Forms em connect-src e form-action" "True" (($head -match "connect-src[^;]*https://api\.web3forms\.com") -and ($head -match "form-action[^;]*https://api\.web3forms\.com"))
 Check "HSTS 1 ano" "True" ($head -match "max-age=31536000")
 Check "X-Frame-Options DENY" "True" ($head -match "X-Frame-Options: DENY")
 Check "COOP" "True" ($head -match "Cross-Origin-Opener-Policy: same-origin")
 
-Write-Host "`n== C. Worker: metodo e CORS ==" -ForegroundColor Cyan
-# Origin valido e obrigatorio no Worker (o navegador sempre envia no POST).
-$origin = @("-H", "Origin: https://www.viziercontabilidade.com.br")
-Check "GET /api/submit -> 405" "405" (Code "/api/submit")
-Check "POST /api/submit sem body -> 400" "400" (Code "/api/submit" "POST" $origin)
-Check "POST /api/submit sem Origin -> 403" "403" (Code "/api/submit" "POST" @("--data-urlencode", "nome=x"))
-$opt = (curl.exe -s -i -X OPTIONS "$Base/api/submit") -join "`n"
-Check "OPTIONS sem ACAO curinga" "True" ($opt -notmatch "Access-Control-Allow-Origin: \*")
-
-Write-Host "`n== D. Worker: validacao ==" -ForegroundColor Cyan
-$valid = @("--data-urlencode", "nome=Teste da Silva", "--data-urlencode", "email=teste@exemplo.com",
-  "--data-urlencode", "whatsapp=(11) 98765-4321", "--data-urlencode", "tipo_empresa=MEI",
-  "--data-urlencode", "servico=Contabilidade Mensal", "--data-urlencode", "lgpd_consent=on")
-
-Check "POST sem nome -> 400" "400" (Code "/api/submit" "POST" ($origin + @("--data-urlencode", "email=a@b.com")))
-Check "POST email invalido -> 400" "400" (Code "/api/submit" "POST" ($origin + $valid[0..1] + @("--data-urlencode", "email=invalido") + $valid[4..9]))
-Check "POST telefone curto -> 400" "400" (Code "/api/submit" "POST" ($origin + $valid[0..3] + @("--data-urlencode", "whatsapp=123") + $valid[6..9]))
-Check "POST sem LGPD -> 400" "400" (Code "/api/submit" "POST" ($origin + $valid[0..7]))
-Check "POST honeypot preenchido -> 400" "400" (Code "/api/submit" "POST" ($origin + $valid + @("--data-urlencode", "website=spam")))
-Check "POST body 25KB -> 413" "413" (Code "/api/submit" "POST" ($origin + @("-H", "Content-Type: application/x-www-form-urlencoded", "--data-binary", "mensagem=$big")))
-Check "POST Origin nao permitida -> 403" "403" (Code "/api/submit" "POST" ($valid + @("-H", "Origin: https://evil.example")))
-$bad = Body "/api/submit" "POST" ($origin + $valid)
-Check "POST valido chega ao StaticForms (502 local / 200 com chave real)" "True" ($bad -match "Erro ao enviar|success")
-
-Write-Host "`n== E. Rate limit (10/min por IP) ==" -ForegroundColor Cyan
-# IP proprio: o contador de D nao deve interferir na contagem exata.
-$eIp = "203.0.113.$((Get-Random -Minimum 2 -Maximum 254))"
-$codes = @()
-for ($i = 0; $i -lt 12; $i++) { $codes += (Code "/api/submit" "POST" ($origin + $valid) $eIp) }
-Check "10 primeiras passam do rate limit" "True" ($codes[0..9] -notcontains "429")
-Check "11a requisicao bloqueada com 429" "429" ($codes[10])
-Check "12a requisicao bloqueada com 429" "429" ($codes[11])
-
-Write-Host "`n== F. URLs finais (Pages redireciona .html) ==" -ForegroundColor Cyan
+Write-Host "`n== C. URLs finais (Pages redireciona .html) ==" -ForegroundColor Cyan
 $allPages = @("/") + (Get-ChildItem (Join-Path $PSScriptRoot "../public/pages") -Filter *.html |
   ForEach-Object { "/pages/" + $_.BaseName })
 $badPages = @()

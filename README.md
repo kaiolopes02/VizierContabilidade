@@ -10,8 +10,8 @@ MEI, pequenas e médias empresas.
   troca de contador.
 - **Planos:** comparativo de recursos entre as modalidades oferecidas.
 - **FAQ:** perguntas frequentes em acordeão, navegável por teclado.
-- **Formulário de contato/orçamento:** validação no navegador e no servidor,
-  consentimento LGPD e proteção contra envio automatizado.
+- **Formulário de contato/orçamento:** validação no navegador, consentimento LGPD,
+  honeypot e envio direto para o Web3Forms.
 - **Conteúdo legal:** política de privacidade e termos de uso.
 - **Três idiomas:** português (padrão), inglês e espanhol, com a escolha
   preservada entre visitas.
@@ -21,9 +21,8 @@ MEI, pequenas e médias empresas.
 ## Estrutura
 
 ```
-public/       site publicado (HTML, CSS, JS, imagens, headers)
-functions/    função de servidor do formulário
-tests/        testes de fumaça do site e do formulário
+public/         site publicado (HTML, CSS, JS, imagens, headers)
+tests/          testes estáticos do formulário e de fumaça do site
 wrangler.jsonc  configuração do projeto no Cloudflare Pages
 ```
 
@@ -33,10 +32,17 @@ wrangler.jsonc  configuração do projeto no Cloudflare Pages
 npx --yes wrangler@4 pages dev --port 8788 --ip 127.0.0.1
 ```
 
-O servidor fica em `http://127.0.0.1:8788`. Crie um `.dev.vars` (não versionado)
-com uma chave de teste do provedor de e-mail para exercitar o envio localmente.
+O servidor fica em `http://127.0.0.1:8788`. O formulário envia direto para
+`https://api.web3forms.com/submit` pelo navegador; não há função de servidor nem
+secret no projeto. A access key do Web3Forms é pública por design.
 
 ## Testes
+
+Verificações estáticas (markup, handler, CSP e resíduos), sem servidor:
+
+```powershell
+node tests/forms.mjs
+```
 
 Com o servidor acima rodando, em outro terminal:
 
@@ -44,16 +50,7 @@ Com o servidor acima rodando, em outro terminal:
 powershell -NoProfile -ExecutionPolicy Bypass -File tests/smoke.ps1
 ```
 
-O fuzz do formulário (validação, encaminhamento e bytes crus em socket) roda
-com:
-
-```powershell
-node tests/fuzz.mjs                                              # local
-node tests/fuzz.mjs https://www.viziercontabilidade.com.br      # produção
-```
-
 ## Deploy
 
 Publicado no Cloudflare Pages a partir da branch `main`. O diretório de saída é
-`public/`, definido no `wrangler.jsonc`. A chave do provedor de e-mail é
-configurada como secret do projeto, nunca no código.
+`public/`, definido no `wrangler.jsonc`.

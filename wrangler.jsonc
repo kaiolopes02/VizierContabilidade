@@ -2,5 +2,4 @@
   "name": "vizier-contabilidade",
   "compatibility_date": "2026-07-02",
   "pages_build_output_dir": "public"
-  // STATICFORMS_ACCESS_KEY é secret, não var: `wrangler pages secret put STATICFORMS_ACCESS_KEY`
 }

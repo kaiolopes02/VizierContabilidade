@@ -20,17 +20,9 @@
     utm: '&utm_source=site&utm_medium=cta&utm_campaign=orcamento'
   };
 
-  // FIX EMAIL: Worker é o ÚNICO caminho. accessKey é server-side (env var),
-  // nunca exposta no client. O fallback direto ao StaticForms foi removido porque
-  // bypassava validação, honeypot, rate limit e LGPD — e não tinha accessKey.
-  // Dev local: use: npx wrangler pages dev (para servir Worker + assets juntos).
-  const STATIC_FORMS_ENDPOINT = '/api/submit';
-  // Mantido apenas para mensagem de erro útil em dev local sem Worker.
-  const isLocalDev = () => {
-    const hostname = window.location.hostname;
-    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
-      || hostname === '0.0.0.0' || hostname.endsWith('.local');
-  };
+  // Web3Forms: a access key é pública por design (o provedor filtra spam/abuso).
+  const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
+  const WEB3FORMS_ACCESS_KEY = '6a9190b9-2c91-4546-9abe-e394fc0554bb';
 
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
@@ -311,22 +303,24 @@
           <button type="button" class="modal-close" aria-label="Fechar modal" data-i18n-aria-label="modal.fechar">&times;</button>
           <h3 class="modal-title" id="modal-title">Solicitação de Orçamento</h3>
           <p class="modal-subtitle" id="modal-subtitle" data-i18n="modal.subtitulo">Preencha os dados abaixo e nossa equipe entrará em contato em breve.</p>
-          <form id="form-orcamento" action="/api/submit" method="POST">            <div class="form-honeypot" aria-hidden="true">
-              <input type="text" name="website" tabindex="-1" autocomplete="off">
-            </div>
+          <form id="form-orcamento" action="https://api.web3forms.com/submit" method="POST">
+            <input type="hidden" name="access_key" value="${WEB3FORMS_ACCESS_KEY}">
+            <input type="checkbox" name="botcheck" class="hidden" style="display:none !important" tabindex="-1" autocomplete="off">
+            <input type="hidden" name="subject" value="Novo contato pelo site Vizier">
+            <input type="hidden" name="from_name" value="Vizier Contabilidade">
             <div class="form-group">
               <label class="form-label" for="modal-nome" data-i18n="modal.nome">Nome completo *</label>
-              <input type="text" id="modal-nome" name="nome" class="form-input" required minlength="3" placeholder="Seu nome completo" data-i18n-placeholder="modal.nomePh">
+              <input type="text" id="modal-nome" name="name" class="form-input" required minlength="3" maxlength="100" autocomplete="name" placeholder="Seu nome completo" data-i18n-placeholder="modal.nomePh">
               <span class="form-error" data-i18n="modal.nomeErro">Por favor, insira seu nome completo.</span>
             </div>
             <div class="form-group">
               <label class="form-label" for="modal-email" data-i18n="modal.email">E-mail *</label>
-              <input type="email" id="modal-email" name="email" class="form-input" required placeholder="seu@email.com" data-i18n-placeholder="modal.emailPh">
+              <input type="email" id="modal-email" name="email" class="form-input" required maxlength="254" autocomplete="email" placeholder="seu@email.com" data-i18n-placeholder="modal.emailPh">
               <span class="form-error" data-i18n="modal.emailErro">Por favor, insira um e-mail válido.</span>
             </div>
             <div class="form-group">
               <label class="form-label" for="modal-whatsapp" data-i18n="modal.whats">WhatsApp *</label>
-              <input type="tel" id="modal-whatsapp" name="whatsapp" class="form-input" required placeholder="(11) 98765-4321" maxlength="15">
+              <input type="tel" id="modal-whatsapp" name="whatsapp" class="form-input" required placeholder="(11) 98765-4321" maxlength="15" autocomplete="tel">
               <span class="form-error" data-i18n="modal.whatsErro">Por favor, insira um WhatsApp válido.</span>
             </div>
             <div class="form-group">
@@ -357,7 +351,7 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="modal-mensagem" data-i18n="modal.mensagem">Mensagem (opcional)</label>
-              <textarea id="modal-mensagem" name="mensagem" class="form-textarea" placeholder="Conte-nos mais sobre sua necessidade..." data-i18n-placeholder="modal.mensagemPh"></textarea>
+              <textarea id="modal-mensagem" name="message" class="form-textarea" maxlength="2000" placeholder="Conte-nos mais sobre sua necessidade..." data-i18n-placeholder="modal.mensagemPh"></textarea>
             </div>
             <div class="form-group">
               <div class="form-check">
@@ -406,12 +400,12 @@
         extraFields.innerHTML = `
           <div class="form-group">
             <label class="form-label" for="modal-cnpj" data-i18n="modal.cnpj">CNPJ da empresa *</label>
-            <input type="text" id="modal-cnpj" name="cnpj" class="form-input" required placeholder="00.000.000/0000-00" maxlength="18">
+            <input type="text" id="modal-cnpj" name="cnpj" class="form-input" required placeholder="00.000.000/0000-00" maxlength="18" autocomplete="off">
             <span class="form-error" data-i18n="modal.cnpjErro">Por favor, insira o CNPJ válido.</span>
           </div>
           <div class="form-group">
             <label class="form-label" for="modal-contador-atual" data-i18n="modal.contador">Contador atual *</label>
-            <input type="text" id="modal-contador-atual" name="contador_atual" class="form-input" required placeholder="Nome do escritório ou contador" data-i18n-placeholder="modal.contadorPh">
+            <input type="text" id="modal-contador-atual" name="contador_atual" class="form-input" required maxlength="100" autocomplete="off" placeholder="Nome do escritório ou contador" data-i18n-placeholder="modal.contadorPh">
             <span class="form-error" data-i18n="modal.contadorErro">Por favor, informe o contador atual.</span>
           </div>
         `;
@@ -501,7 +495,7 @@
     });
   };
 
-  /* ---------- Form Handler (mailto formatado) ---------- */
+  /* ---------- Form Handler (Web3Forms) ---------- */
   const initFormHandler = () => {
     // Reescrever o valor joga o cursor para o fim; reposiciona pela diferenca de tamanho.
     const mask = (el, maxDigits, formatter) => {
@@ -534,9 +528,8 @@
       // Remove previous errors
       form.querySelectorAll('.form-group').forEach(g => g.classList.remove('error'));
 
-      const honeypot = form.querySelector('[name="website"]');
-      if (honeypot?.value) {
-        e.preventDefault();
+      const honeypot = form.querySelector('[name="botcheck"]');
+      if (honeypot?.checked) {
         e.stopPropagation();
         return;
       }
@@ -546,7 +539,7 @@
         return el ? el.value.trim() : '';
       };
 
-      const nome = getVal('nome');
+      const nome = getVal('name');
       const email = getVal('email');
       const whatsapp = getVal('whatsapp');
       const tipoEmpresa = getVal('tipo_empresa');
@@ -555,7 +548,7 @@
       let valid = true;
 
       if (!nome || nome.length < 3) {
-        form.querySelector('[name="nome"]')?.closest('.form-group')?.classList.add('error');
+        form.querySelector('[name="name"]')?.closest('.form-group')?.classList.add('error');
         valid = false;
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -588,30 +581,10 @@
         return;
       }
 
-      // Build FormData
       const formData = new FormData(form);
 
-      // Button loading state
       const submitButton = form.querySelector('button[type="submit"]');
-      if (submitButton) {
-        submitButton.textContent = tr('modal.enviando', 'Enviando...');
-        submitButton.classList.add('loading');
-      }
 
-      // Remove honeypot from FormData before submitting (Bug #4)
-      formData.delete('website');
-
-      // FIX MOBILE/COMPAT: o front nomeia o telefone como "whatsapp", mas o Worker
-      // (functions/api/submit.js) valida o campo "telefone". Sem este mapeamento o
-      // Worker retornava 400 ("Campo obrigatorio: telefone") em 100% dos envios,
-      // forcando o fallback no frontend e aumentando a chance de falha em rede lenta.
-      if (!formData.get('telefone') && formData.get('whatsapp')) {
-        formData.append('telefone', formData.get('whatsapp'));
-      }
-
-      // FIX MOBILE: helper para limpar/ exibir erros de envio visiveis ao usuario.
-      // Sem isso, falhas de rede no mobile (timeout/abort) eram silenciosas — nenhum
-      // feedback, nenhum console.error visivel ao usuario, e-mail nao chegava.
       const clearSubmitError = () => {
         const errEl = form.querySelector('#form-submit-error');
         if (errEl) errEl.style.display = 'none';
@@ -628,87 +601,51 @@
         errEl.textContent = message;
         errEl.style.display = 'block';
       };
-      clearSubmitError();
-
-// FIX MOBILE: timeout de 25s via AbortController. Em 3G/4G a latencia pode
-      // chegar a 2-3s por RTT, e o Worker faz um segundo fetch (Worker->Formspree)
-      // adicionando mais latencia. 25s cobre o pior caso sem ser infinito.
-      // DEBUG: se timeout ainda ocorrer em testes mobile, aumente este valor.
-      const fetchWithTimeout = (url, options, ms = 25000) => {
-        const controller = new AbortController();
-       const id = setTimeout(() => controller.abort(), ms);
-        return fetch(url, Object.assign({}, options, { signal: controller.signal, headers: Object.assign({}, options.headers, { 'Accept': 'application/json' }) }))
-         .then(res => { clearTimeout(id); return res; })
-         .catch(err => { clearTimeout(id); throw err; });
-     };
-
-      const submitWithFallback = (url) => fetchWithTimeout(url, { method: 'POST', body: formData })
-        .then(response => {
-          // ponytail: qualquer !ok dispara fallback; dev local já pula /api/submit
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.status === 405 ? 'Method not allowed' : 'Server error'}`);
-          }
-
-          const modalContent = form.closest('.modal');
-          const formSuccess = modalContent ? modalContent.querySelector('#form-success') : null;
-
-          if (formSuccess) {
-            formSuccess.style.display = 'block';
-            form.style.display = 'none';
-
-
-            const modalTitle = modalContent.querySelector('#modal-title');
-            const modalSubtitle = modalContent.querySelector('#modal-subtitle');
-            if (modalTitle) modalTitle.style.display = 'none';
-            if (modalSubtitle) modalSubtitle.style.display = 'none';
-            if (submitButton) {
-              submitButton.textContent = tr('modal.enviar', 'Enviar Solicitação');
-              submitButton.classList.remove('loading');
-            }
-          } else {
-            console.error('[Vizier] Elemento #form-success nao encontrado no DOM do modal.');
-            showSubmitError(tr('modal.erroInterno', 'Erro interno ao exibir confirmacao. Tente novamente.'));
-          }
-});
-      // ponytail: local dev simula sucesso apos validacao — testa todo o fluxo
-      // UI (modal→preenchimento→validacao→confirmacao) sem depender do Worker.
       const showFormSuccess = () => {
         const modalContent = form.closest('.modal');
         const formSuccess = modalContent ? modalContent.querySelector('#form-success') : null;
-        if (formSuccess) {
-          formSuccess.style.display = 'block';
-          form.style.display = 'none';
-          const modalTitle = modalContent.querySelector('#modal-title');
-          const modalSubtitle = modalContent.querySelector('#modal-subtitle');
-          if (modalTitle) modalTitle.style.display = 'none';
-          if (modalSubtitle) modalSubtitle.style.display = 'none';
-          if (submitButton) {
-            submitButton.textContent = tr('modal.enviar', 'Enviar Solicitação');
-            submitButton.classList.remove('loading');
-          }
+        if (!formSuccess) {
+          console.error('[Vizier] Elemento #form-success nao encontrado no DOM do modal.');
+          showSubmitError(tr('modal.erroInterno', 'Erro interno ao exibir confirmacao. Tente novamente.'));
+          return;
         }
+        formSuccess.style.display = 'block';
+        form.style.display = 'none';
+        const modalTitle = modalContent.querySelector('#modal-title');
+        const modalSubtitle = modalContent.querySelector('#modal-subtitle');
+        if (modalTitle) modalTitle.style.display = 'none';
+        if (modalSubtitle) modalSubtitle.style.display = 'none';
       };
 
-      if (isLocalDev()) {
-        setTimeout(showFormSuccess, 800);
-        return;
+      clearSubmitError();
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = tr('modal.enviando', 'Enviando...');
+        submitButton.classList.add('loading');
       }
 
-      submitWithFallback(STATIC_FORMS_ENDPOINT)
+      fetch(WEB3FORMS_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: formData
+      })
+        .then(async (response) => {
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || `HTTP ${response.status}`);
+          }
+          showFormSuccess();
+        })
         .catch((error) => {
-          // FIX EMAIL: fallback direto ao StaticForms removido — bypassava validação,
-          // honeypot, rate limit, LGPD e não tinha accessKey. Worker é o único caminho.
           console.error('[Vizier] Falha no envio:', error);
+          showSubmitError(tr('modal.erroEnvio', 'Nao foi possivel enviar agora. Verifique sua conexao e tente novamente.'));
+        })
+        .finally(() => {
           if (submitButton) {
+            submitButton.disabled = false;
             submitButton.textContent = tr('modal.enviar', 'Enviar Solicitação');
             submitButton.classList.remove('loading');
           }
-          const msg = (error && error.name === 'AbortError')
-            ? tr('modal.erroTimeout', 'O envio demorou demais. Verifique sua conexao e tente novamente.')
-            : isLocalDev()
-              ? 'Worker nao disponivel em dev local. Use: npx wrangler pages dev'
-              : tr('modal.erroEnvio', 'Nao foi possivel enviar agora. Verifique sua conexao e tente novamente.');
-          showSubmitError(msg);
         });
     });
   };
