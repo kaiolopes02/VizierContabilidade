@@ -449,7 +449,10 @@
       const errEl = overlay.querySelector('#form-submit-error');
       if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
       const submitBtn = overlay.querySelector('button[type="submit"]');
-      if (submitBtn) submitBtn.classList.remove('loading');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+      }
 
       overlay.classList.remove('active');
       setBackgroundInert(false);
@@ -603,6 +606,7 @@
       };
       const showFormSuccess = () => {
         const modalContent = form.closest('.modal');
+        if (!modalContent?.closest('.modal-overlay')?.classList.contains('active')) return;
         const formSuccess = modalContent ? modalContent.querySelector('#form-success') : null;
         if (!formSuccess) {
           console.error('[Vizier] Elemento #form-success nao encontrado no DOM do modal.');
@@ -624,10 +628,12 @@
         submitButton.classList.add('loading');
       }
 
+      const timeoutSignal = typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(20000) : undefined;
       fetch(WEB3FORMS_ENDPOINT, {
         method: 'POST',
         headers: { 'Accept': 'application/json' },
-        body: formData
+        body: formData,
+        signal: timeoutSignal
       })
         .then(async (response) => {
           const data = await response.json().catch(() => ({}));

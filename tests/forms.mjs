@@ -46,6 +46,7 @@ ok(main.includes("!response.ok || !data.success"), "checa status HTTP e success"
 ok(main.includes("errEl.textContent = message"), "erro exibido via textContent");
 ok(main.includes("submitButton.disabled = true"), "botao desabilitado no envio");
 ok(/finally\(\(\) => \{[\s\S]*disabled = false/.test(main), "botao reabilitado no finally");
+ok(main.includes("AbortSignal.timeout(20000)"), "envio com timeout de 20s");
 ok(!main.includes("innerHTML = message") && !main.includes("innerHTML = error"), "nenhum innerHTML com dado de usuario");
 
 // --- CSP ---
