@@ -91,7 +91,19 @@ ok(main.includes("h-captcha-response"), "le o token h-captcha-response");
 ok(main.indexOf("h-captcha-response") < main.indexOf("const formData = new FormData(form)"), "gate do captcha acontece antes de montar o FormData");
 ok(main.includes("hCaptcha.reset("), "reseta o widget do hCaptcha");
 ok((i18n.match(/'modal\.captchaErro'/g) || []).length === 3, "mensagem de erro do captcha nos 3 idiomas");
-ok(main.includes("hcaptchaFailed"), "flag de falha do carregamento do script do hCaptcha");
-ok(/if \(hcaptchaFailed\)[\s\S]*modal\.erroEnvio/.test(main), "gate usa modal.erroEnvio quando o script do hCaptcha falhou");
+const hcaptchaErrorListener = main.match(/s\.addEventListener\('error', \(\) => \{([\s\S]*?)\n    \}, \{ once: true \}\);/)?.[1] ?? '';
+ok(hcaptchaErrorListener.includes('hcaptchaFailed = true'), "listener de erro do hCaptcha define hcaptchaFailed = true");
+
+const hcaptchaGateMatch = main.match(/if \(hcaptchaFailed\) \{([\s\S]*?)\n      \}/);
+const hcaptchaGate = hcaptchaGateMatch?.[1] ?? '';
+const hcaptchaGatePos = hcaptchaGateMatch?.index ?? -1;
+const captchaTokenPos = main.indexOf('const captchaToken =');
+const formDataPos = main.indexOf('const formData = new FormData(form)');
+const fetchPos = main.indexOf('fetch(WEB3FORMS_ENDPOINT');
+ok(/showSubmitError\(tr\('modal\.erroEnvio'/.test(hcaptchaGate), "gate do hCaptcha usa modal.erroEnvio");
+ok(/\breturn;/.test(hcaptchaGate), "gate do hCaptcha retorna antes de continuar o envio");
+ok(hcaptchaGatePos !== -1 && hcaptchaGatePos < captchaTokenPos, "gate do hCaptcha acontece antes da leitura do token");
+ok(hcaptchaGatePos !== -1 && hcaptchaGatePos < formDataPos, "gate do hCaptcha acontece antes de montar o FormData");
+ok(hcaptchaGatePos !== -1 && hcaptchaGatePos < fetchPos, "gate do hCaptcha acontece antes do fetch");
 
 console.log(`forms: ${n} verificacoes OK`);
