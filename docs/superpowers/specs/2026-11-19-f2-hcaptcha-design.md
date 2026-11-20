@@ -43,9 +43,9 @@ Comportamento desejado (do próprio achado): *"O formulário deve entregar apena
 
 - Novas constantes:
   - `HCAPTCHA_SITEKEY = '50b2fe65-b00b-4b9e-ad62-3ba471098be2'` — sitekey compartilhado do Web3Forms para planos grátis (docs: "Manual Setup").
-  - `HCAPTCHA_SCRIPT = 'https://js.hcaptcha.com/1/api.js?render=explicit'`.
+  - `HCAPTCHA_SCRIPT = 'https://js.hcaptcha.com/1/api.js?render=explicit&onload=vizierHCaptchaReady'`.
 - Markup do modal (`create()`, antes do botão de submit): `<div id="hcaptcha-widget" class="h-captcha"></div>` dentro de um `.form-group`, com `span.form-error[data-i18n="modal.captchaErro"]`.
-- Script carregado **sob demanda**, na primeira abertura do modal (lazy): um `<script async defer>` injetado uma única vez; ao carregar (ou se `window.hcaptcha` já existir), `window.hcaptcha.render(container, { sitekey })` e o widget id é guardado. `render=explicit` é obrigatório porque o modal é criado dinamicamente (o auto-render não encontraria o container).
+- Script carregado **sob demanda**, na primeira abertura do modal (lazy): um `<script async defer>` injetado uma única vez com `render=explicit&onload=vizierHCaptchaReady`. Antes de anexá-lo, `window.vizierHCaptchaReady` aponta para a função de render; o callback do hCaptcha chama `window.hcaptcha.render(container, { sitekey })` e só guarda o widget id quando o retorno é verdadeiro. O listener `load` é apenas um fallback de 50 ms, condicionado a `hcaptchaWidgetId === null`. `render=explicit` é obrigatório porque o modal é criado dinamicamente (o auto-render não encontraria o container).
 - **Gate no cliente** no handler de submit: se `textarea[name="h-captcha-response"]` estiver vazio → marcar o `.form-group` com `.error` e **não** fazer o `fetch` (mesma convenção de validação já existente no arquivo).
 - **Reset** do widget (`window.hcaptcha.reset(widgetId)`) no caminho de erro do envio e ao fechar o modal — o token é de uso único e expira.
 - Nada de `innerHTML` com dado de usuário; visual/classes existentes intactos.
@@ -54,7 +54,7 @@ Comportamento desejado (do próprio achado): *"O formulário deve entregar apena
 
 **`public/js/i18n.js`** — novas chaves `modal.captchaErro` (e `modal.captcha` se houver rótulo) nos dicionários `pt-BR`, `en-US` e `es`.
 
-**`tests/forms.mjs`** — Checks estáticos novos (o arquivo já é o lugar dos checks do formulário): sitekey e `render=explicit` presentes; widget no markup; gate do captcha **antes** de `new FormData(form)`; `window.hcaptcha.reset` no caminho de erro; CSP com as origens do hCaptcha nas 3 diretivas; chave de i18n nos 3 idiomas.
+**`tests/forms.mjs`** — Checks estáticos novos (o arquivo já é o lugar dos checks do formulário): sitekey, `render=explicit` e `onload=vizierHCaptchaReady` presentes; callback definido antes do `appendChild`; fallback condicionado ao widget ainda não renderizado; widget no markup; gate do captcha **antes** de `new FormData(form)`; `window.hcaptcha.reset` no caminho de erro; CSP com as origens do hCaptcha nas 3 diretivas; chave de i18n nos 3 idiomas.
 
 **`README.md`** — 1-2 linhas: o formulário depende do modo hCaptcha do Web3Forms e do passo de ativação no painel.
 

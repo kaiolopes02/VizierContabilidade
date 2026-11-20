@@ -85,7 +85,8 @@ ok(!existsSync(join(root, "tests/fuzz.mjs")), "fuzz antigo removido");
 
 // --- hCaptcha: barreira server-side do F2 ---
 ok(main.includes("const HCAPTCHA_SITEKEY = '50b2fe65-b00b-4b9e-ad62-3ba471098be2'"), "sitekey do hCaptcha (plano gratis do Web3Forms)");
-ok(main.includes("const HCAPTCHA_SCRIPT = 'https://js.hcaptcha.com/1/api.js?render=explicit'"), "script do hCaptcha com render=explicit");
+const hcaptchaScriptUrl = main.match(/const HCAPTCHA_SCRIPT = '([^']+)'/)?.[1] ?? '';
+ok(hcaptchaScriptUrl === 'https://js.hcaptcha.com/1/api.js?render=explicit&onload=vizierHCaptchaReady', "script do hCaptcha usa render=explicit e onload=vizierHCaptchaReady");
 ok(main.includes('id="hcaptcha-widget"') && main.includes('class="h-captcha"'), "widget do hCaptcha no modal");
 const formStart = main.indexOf('<form id="form-orcamento"');
 const formEnd = main.indexOf('</form>', formStart);
@@ -96,6 +97,15 @@ ok(main.includes("typeof window.hcaptcha !== 'undefined'"), "verifica a API hcap
 ok(main.includes("window.hcaptcha.render("), "renderiza o widget pela API hcaptcha em minusculas");
 ok(!/\bhCaptcha\b/.test(main), "API hCaptcha com casing incorreto ausente");
 ok((i18n.match(/'modal\.captchaErro'/g) || []).length === 3, "mensagem de erro do captcha nos 3 idiomas");
+const ensureHCaptchaSource = main.match(/const ensureHCaptcha = \(container\) => \{([\s\S]*?)\n  \};/)?.[1] ?? '';
+const hcaptchaCallbackPos = main.indexOf('window.vizierHCaptchaReady = render;');
+const hcaptchaAppendPos = main.indexOf('document.head.appendChild(s)');
+ok(hcaptchaCallbackPos !== -1 && hcaptchaAppendPos !== -1 && hcaptchaCallbackPos < hcaptchaAppendPos, "callback onload do hCaptcha definido antes de anexar o script");
+ok(ensureHCaptchaSource.includes('window.vizierHCaptchaReady = render;'), "callback onload usa a função de render");
+ok(/if \(hcaptchaWidgetId !== null \|\| typeof window\.hcaptcha === 'undefined'\) return;/.test(ensureHCaptchaSource), "guard do widget evita render duplicado");
+ok(/s\.addEventListener\('load', \(\) => \{\s*setTimeout\(\(\) => \{\s*if \(hcaptchaWidgetId === null\) render\(\);\s*\}, 50\);\s*\}, \{ once: true \}\);/.test(ensureHCaptchaSource), "fallback tardio renderiza somente quando o widget ainda nao foi renderizado");
+ok(!/s\.addEventListener\('load',\s*render\b/.test(ensureHCaptchaSource), "listener load nao chama render incondicionalmente");
+ok(/const widgetId = window\.hcaptcha\.render\([^;]+\);\s*if \(widgetId\) hcaptchaWidgetId = widgetId;/.test(ensureHCaptchaSource), "ID do widget so e atribuido quando render devolve valor verdadeiro");
 const hcaptchaErrorListener = main.match(/s\.addEventListener\('error', \(\) => \{([\s\S]*?)\n    \}, \{ once: true \}\);/)?.[1] ?? '';
 ok(hcaptchaErrorListener.includes('hcaptchaFailed = true'), "listener de erro do hCaptcha define hcaptchaFailed = true");
 

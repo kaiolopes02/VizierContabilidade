@@ -24,7 +24,7 @@
   const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
   const WEB3FORMS_ACCESS_KEY = '6a9190b9-2c91-4546-9abe-e394fc0554bb';
   const HCAPTCHA_SITEKEY = '50b2fe65-b00b-4b9e-ad62-3ba471098be2';
-  const HCAPTCHA_SCRIPT = 'https://js.hcaptcha.com/1/api.js?render=explicit';
+  const HCAPTCHA_SCRIPT = 'https://js.hcaptcha.com/1/api.js?render=explicit&onload=vizierHCaptchaReady';
 
   let hcaptchaWidgetId = null;
   let hcaptchaLoading = false;
@@ -34,7 +34,8 @@
     if (!container) return;
     const render = () => {
       if (hcaptchaWidgetId !== null || typeof window.hcaptcha === 'undefined') return;
-      hcaptchaWidgetId = window.hcaptcha.render(container, { sitekey: HCAPTCHA_SITEKEY });
+      const widgetId = window.hcaptcha.render(container, { sitekey: HCAPTCHA_SITEKEY });
+      if (widgetId) hcaptchaWidgetId = widgetId;
     };
     if (typeof window.hcaptcha !== 'undefined') { render(); return; }
     if (hcaptchaLoading) return;
@@ -43,11 +44,16 @@
     s.src = HCAPTCHA_SCRIPT;
     s.async = true;
     s.defer = true;
-    s.addEventListener('load', render, { once: true });
+    s.addEventListener('load', () => {
+      setTimeout(() => {
+        if (hcaptchaWidgetId === null) render();
+      }, 50);
+    }, { once: true });
     s.addEventListener('error', () => {
       hcaptchaFailed = true;
       s.remove();
     }, { once: true });
+    window.vizierHCaptchaReady = render;
     document.head.appendChild(s);
   };
 
