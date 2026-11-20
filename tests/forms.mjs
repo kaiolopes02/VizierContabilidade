@@ -65,20 +65,29 @@ for (const f of htmls) {
   const html = read(f);
   ok(html.includes("/js/main.js?v=11"), `${f} usa main.js?v=11`);
   ok(html.includes("/js/i18n.js?v=5"), `${f} usa i18n.js?v=5`);
+  ok(!html.includes("/js/i18n.js?v=4"), `${f} nao usa i18n.js?v=4`);
+  ok((html.match(/\/js\/i18n\.js\?v=5/g) || []).length === 1, `${f} usa i18n.js?v=5 exatamente uma vez`);
 }
 
 // --- Transparencia LGPD do hCaptcha ---
 ok(privacidade.includes("Provedores que tratam dados em nosso nome"), "politica identifica os provedores sem confundir operador LGPD e controlador");
+ok(privacidade.includes("O formulário também utiliza o hCaptcha") && privacidade.includes("Intuition Machines, Inc."), "politica descreve o hCaptcha sem atribuir papel juridico nao confirmado");
 ok(privacidade.includes("hCaptcha"), "politica em portugues cita hCaptcha");
 const privtext4a = [...i18n.matchAll(/'privtext4a': "([^"]+)"/g)].map((m) => m[1]);
 ok(privtext4a.length === 2, "privtext4a traduzido em en-US e es");
 ok(privtext4a.every((text) => text.includes("hCaptcha")), "traducoes en-US e es citam hCaptcha");
+ok(privtext4a.some((text) => text.includes("The form also uses hCaptcha") && text.includes("Intuition Machines, Inc.")), "traducao en-US descreve o hCaptcha sem atribuir papel juridico nao confirmado");
+ok(privtext4a.some((text) => text.includes("El formulario también utiliza hCaptcha") && text.includes("Intuition Machines, Inc.")), "traducao es descreve o hCaptcha sem atribuir papel juridico nao confirmado");
 ok(privtext4a.some((text) => text.includes("IP address") && text.includes("browser and device information") && text.includes("interactions with the security challenge")), "traducao en-US descreve os dados tecnicos do hCaptcha");
 ok(privtext4a.some((text) => text.includes("dirección IP") && text.includes("navegador y el dispositivo") && text.includes("interacciones con el desafío de seguridad")), "traducao es descreve os dados tecnicos do hCaptcha");
 ok(privacidade.includes("endereço IP") && privacidade.includes("navegador e dispositivo") && privacidade.includes("interações com o desafio de segurança"), "politica descreve os dados tecnicos do hCaptcha");
 ok(privacidade.includes('data-i18n="privupdated"') && privacidade.includes("20 de novembro de 2026"), "politica tem data propria de atualizacao");
-ok(i18n.includes("'privupdated': \"Last updated: November 20, 2026\"") && i18n.includes("'privupdated': \"Última actualización: 20 de noviembre de 2026\""), "data da politica traduzida nos dois idiomas");
-ok(termos.includes('data-i18n="legal.updated"') && termos.includes("26 de maio de 2026"), "data dos termos permanece inalterada");
+const legalUpdated = [...i18n.matchAll(/'legal.updated': "([^"]+)"/g)].map((m) => m[1]);
+const privUpdated = [...i18n.matchAll(/'privupdated': "([^"]+)"/g)].map((m) => m[1]);
+ok(legalUpdated.length === 2 && legalUpdated.some((text) => text === "Last updated: May 26, 2026") && legalUpdated.some((text) => text === "Última actualización: 26 de mayo de 2026"), "data dos termos traduzida permanece inalterada");
+ok(privUpdated.length === 2 && legalUpdated.every((text, index) => text !== privUpdated[index]), "data da politica e diferente da data dos termos nos dois idiomas");
+ok(privacidade.includes('data-i18n="privupdated"') && privacidade.includes("20 de novembro de 2026"), "politica tem data propria de atualizacao");
+ok(termos.includes('data-i18n="legal.updated"') && termos.includes("26 de maio de 2026"), "fallback da data dos termos permanece inalterado");
 
 // --- Residuos do provedor antigo ---
 const residuos = [
