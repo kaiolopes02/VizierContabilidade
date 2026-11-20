@@ -11,6 +11,7 @@ const main = read("public/js/main.js");
 const headers = read("public/_headers");
 const i18n = read("public/js/i18n.js");
 const privacidade = read("public/pages/politica-de-privacidade.html");
+const termos = read("public/pages/termos-de-uso.html");
 const KEY = "6a9190b9-2c91-4546-9abe-e394fc0554bb";
 
 const htmls = ["public/index.html", "public/404.html"]
@@ -63,8 +64,21 @@ ok(headers.includes("frame-ancestors 'none'"), "frame-ancestors continua none");
 for (const f of htmls) {
   const html = read(f);
   ok(html.includes("/js/main.js?v=11"), `${f} usa main.js?v=11`);
-  ok(html.includes("/js/i18n.js?v=4"), `${f} usa i18n.js?v=4`);
+  ok(html.includes("/js/i18n.js?v=5"), `${f} usa i18n.js?v=5`);
 }
+
+// --- Transparencia LGPD do hCaptcha ---
+ok(privacidade.includes("Provedores que tratam dados em nosso nome"), "politica identifica os provedores sem confundir operador LGPD e controlador");
+ok(privacidade.includes("hCaptcha"), "politica em portugues cita hCaptcha");
+const privtext4a = [...i18n.matchAll(/'privtext4a': "([^"]+)"/g)].map((m) => m[1]);
+ok(privtext4a.length === 2, "privtext4a traduzido em en-US e es");
+ok(privtext4a.every((text) => text.includes("hCaptcha")), "traducoes en-US e es citam hCaptcha");
+ok(privtext4a.some((text) => text.includes("IP address") && text.includes("browser and device information") && text.includes("interactions with the security challenge")), "traducao en-US descreve os dados tecnicos do hCaptcha");
+ok(privtext4a.some((text) => text.includes("dirección IP") && text.includes("navegador y el dispositivo") && text.includes("interacciones con el desafío de seguridad")), "traducao es descreve os dados tecnicos do hCaptcha");
+ok(privacidade.includes("endereço IP") && privacidade.includes("navegador e dispositivo") && privacidade.includes("interações com o desafio de segurança"), "politica descreve os dados tecnicos do hCaptcha");
+ok(privacidade.includes('data-i18n="privupdated"') && privacidade.includes("20 de novembro de 2026"), "politica tem data propria de atualizacao");
+ok(i18n.includes("'privupdated': \"Last updated: November 20, 2026\"") && i18n.includes("'privupdated': \"Última actualización: 20 de noviembre de 2026\""), "data da politica traduzida nos dois idiomas");
+ok(termos.includes('data-i18n="legal.updated"') && termos.includes("26 de maio de 2026"), "data dos termos permanece inalterada");
 
 // --- Residuos do provedor antigo ---
 const residuos = [
