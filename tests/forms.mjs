@@ -99,23 +99,33 @@ ok((i18n.match(/'modal\.captchaErro'/g) || []).length === 3, "mensagem de erro d
 const hcaptchaErrorListener = main.match(/s\.addEventListener\('error', \(\) => \{([\s\S]*?)\n    \}, \{ once: true \}\);/)?.[1] ?? '';
 ok(hcaptchaErrorListener.includes('hcaptchaFailed = true'), "listener de erro do hCaptcha define hcaptchaFailed = true");
 
+const gateRequestInfo = (match) => {
+  const body = match?.[1] ?? '';
+  const returnOffset = body.search(/\breturn;/);
+  const bodyStart = match ? match.index + match[0].indexOf(body) : -1;
+  return {
+    body,
+    returnPos: returnOffset === -1 ? -1 : bodyStart + returnOffset,
+    beforeReturn: returnOffset === -1 ? '' : body.slice(0, returnOffset)
+  };
+};
 const hcaptchaGateMatch = main.match(/if \(hcaptchaFailed\) \{([\s\S]*?)\n      \}/);
-const hcaptchaGate = hcaptchaGateMatch?.[1] ?? '';
 const hcaptchaGatePos = hcaptchaGateMatch?.index ?? -1;
+const hcaptchaGateInfo = gateRequestInfo(hcaptchaGateMatch);
 const emptyTokenGateMatch = main.match(/if \(!captchaToken\) \{([\s\S]*?)\n      \}/);
-const emptyTokenGate = emptyTokenGateMatch?.[1] ?? '';
-const emptyTokenGatePos = emptyTokenGateMatch?.index ?? -1;
+const emptyTokenGateInfo = gateRequestInfo(emptyTokenGateMatch);
 const captchaTokenPos = main.indexOf('const captchaToken =');
 const formDataPos = main.indexOf('const formData = new FormData(form)');
 const fetchPos = main.indexOf('fetch(WEB3FORMS_ENDPOINT');
-ok(/showSubmitError\(tr\('modal\.erroEnvio'/.test(hcaptchaGate), "gate do hCaptcha usa modal.erroEnvio");
-ok(/\breturn;/.test(hcaptchaGate), "gate do hCaptcha retorna antes de continuar o envio");
+const requestPattern = /\bfetch\s*\(|\bnew\s+FormData\s*\(/;
+ok(/showSubmitError\(tr\('modal\.erroEnvio'/.test(hcaptchaGateInfo.body), "gate do hCaptcha usa modal.erroEnvio");
+ok(hcaptchaGateInfo.returnPos !== -1 && !requestPattern.test(hcaptchaGateInfo.beforeReturn), "gate do hCaptcha nao cria FormData nem envia request antes do return");
 ok(hcaptchaGatePos !== -1 && hcaptchaGatePos < captchaTokenPos, "gate do hCaptcha acontece antes da leitura do token");
-ok(hcaptchaGatePos !== -1 && hcaptchaGatePos < formDataPos, "gate do hCaptcha acontece antes de montar o FormData");
-ok(hcaptchaGatePos !== -1 && hcaptchaGatePos < fetchPos, "gate do hCaptcha acontece antes do fetch");
-ok(emptyTokenGateMatch !== null && /\breturn;/.test(emptyTokenGate), "gate de token vazio retorna antes de continuar o envio");
-ok(emptyTokenGatePos !== -1 && emptyTokenGatePos < formDataPos, "gate de token vazio acontece antes de montar o FormData");
-ok(emptyTokenGatePos !== -1 && emptyTokenGatePos < fetchPos, "gate de token vazio acontece antes do fetch");
+ok(hcaptchaGateInfo.returnPos !== -1 && hcaptchaGateInfo.returnPos < formDataPos, "return do gate do hCaptcha acontece antes de montar o FormData");
+ok(hcaptchaGateInfo.returnPos !== -1 && hcaptchaGateInfo.returnPos < fetchPos, "return do gate do hCaptcha acontece antes do fetch");
+ok(emptyTokenGateInfo.returnPos !== -1 && !requestPattern.test(emptyTokenGateInfo.beforeReturn), "gate de token vazio nao cria FormData nem envia request antes do return");
+ok(emptyTokenGateInfo.returnPos !== -1 && emptyTokenGateInfo.returnPos < formDataPos, "return do gate de token vazio acontece antes de montar o FormData");
+ok(emptyTokenGateInfo.returnPos !== -1 && emptyTokenGateInfo.returnPos < fetchPos, "return do gate de token vazio acontece antes do fetch");
 
 const failedSendMatch = main.match(/\.catch\(\(error\) => \{([\s\S]*?)\n        \}\)/);
 const failedSend = failedSendMatch?.[1] ?? '';
