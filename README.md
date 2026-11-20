@@ -53,6 +53,15 @@ Com o servidor acima rodando, em outro terminal:
 powershell -NoProfile -ExecutionPolicy Bypass -File tests/smoke.ps1
 ```
 
+## Gate manual antes do deploy
+
+Execute estes checks no navegador antes de publicar:
+
+1. Abra o modal e confirme que o widget hCaptcha é renderizado.
+2. Envie sem resolver o captcha e confirme, no Network, que nenhum request para `api.web3forms.com` sai.
+3. Resolva o captcha, envie e confirme que o request contém `h-captcha-response` com valor não vazio.
+4. Bloqueie `js.hcaptcha.com` no navegador, envie e confirme que nenhum request para `api.web3forms.com` sai.
+
 ## Deploy
 
 Publicado no Cloudflare Pages a partir da branch `main`. O diretório de saída é

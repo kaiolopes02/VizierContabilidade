@@ -33,10 +33,10 @@
   const ensureHCaptcha = (container) => {
     if (!container) return;
     const render = () => {
-      if (hcaptchaWidgetId !== null || typeof window.hCaptcha === 'undefined') return;
-      hcaptchaWidgetId = window.hCaptcha.render(container, { sitekey: HCAPTCHA_SITEKEY });
+      if (hcaptchaWidgetId !== null || typeof window.hcaptcha === 'undefined') return;
+      hcaptchaWidgetId = window.hcaptcha.render(container, { sitekey: HCAPTCHA_SITEKEY });
     };
-    if (typeof window.hCaptcha !== 'undefined') { render(); return; }
+    if (typeof window.hcaptcha !== 'undefined') { render(); return; }
     if (hcaptchaLoading) return;
     hcaptchaLoading = true;
     const s = document.createElement('script');
@@ -468,7 +468,7 @@
         form.reset();
         form.style.display = 'block';
       }
-      if (typeof window.hCaptcha !== 'undefined' && hcaptchaWidgetId !== null) window.hCaptcha.reset(hcaptchaWidgetId);
+      if (typeof window.hcaptcha !== 'undefined' && hcaptchaWidgetId !== null) window.hcaptcha.reset(hcaptchaWidgetId);
       const formSuccess = overlay.querySelector('#form-success');
       if (formSuccess) formSuccess.style.display = 'none';
 
@@ -689,7 +689,7 @@
           showFormSuccess();
         })
         .catch((error) => {
-          if (typeof window.hCaptcha !== 'undefined' && hcaptchaWidgetId !== null) window.hCaptcha.reset(hcaptchaWidgetId);
+          if (typeof window.hcaptcha !== 'undefined' && hcaptchaWidgetId !== null) window.hcaptcha.reset(hcaptchaWidgetId);
           console.error('[Vizier] Falha no envio:', error);
           showSubmitError(tr('modal.erroEnvio', 'Nao foi possivel enviar agora. Verifique sua conexao e tente novamente.'));
         })

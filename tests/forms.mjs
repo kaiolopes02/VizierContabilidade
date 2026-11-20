@@ -62,8 +62,8 @@ ok(headers.includes("frame-ancestors 'none'"), "frame-ancestors continua none");
 // --- Versoes de cache em todas as paginas ---
 for (const f of htmls) {
   const html = read(f);
-  ok(html.includes("/js/main.js?v=9"), `${f} usa main.js?v=9`);
-  ok(html.includes("/js/i18n.js?v=3"), `${f} usa i18n.js?v=3`);
+  ok(html.includes("/js/main.js?v=10"), `${f} usa main.js?v=10`);
+  ok(html.includes("/js/i18n.js?v=4"), `${f} usa i18n.js?v=4`);
 }
 
 // --- Residuos do provedor antigo ---
@@ -87,9 +87,14 @@ ok(!existsSync(join(root, "tests/fuzz.mjs")), "fuzz antigo removido");
 ok(main.includes("const HCAPTCHA_SITEKEY = '50b2fe65-b00b-4b9e-ad62-3ba471098be2'"), "sitekey do hCaptcha (plano gratis do Web3Forms)");
 ok(main.includes("const HCAPTCHA_SCRIPT = 'https://js.hcaptcha.com/1/api.js?render=explicit'"), "script do hCaptcha com render=explicit");
 ok(main.includes('id="hcaptcha-widget"') && main.includes('class="h-captcha"'), "widget do hCaptcha no modal");
+const formStart = main.indexOf('<form id="form-orcamento"');
+const formEnd = main.indexOf('</form>', formStart);
+const formMarkup = formStart !== -1 && formEnd !== -1 ? main.slice(formStart, formEnd) : '';
+ok(formMarkup.includes('id="hcaptcha-widget"'), "container do hCaptcha dentro do form-orcamento");
 ok(main.includes("h-captcha-response"), "le o token h-captcha-response");
-ok(main.indexOf("h-captcha-response") < main.indexOf("const formData = new FormData(form)"), "gate do captcha acontece antes de montar o FormData");
-ok(main.includes("hCaptcha.reset("), "reseta o widget do hCaptcha");
+ok(main.includes("typeof window.hcaptcha !== 'undefined'"), "verifica a API hcaptcha em minusculas");
+ok(main.includes("window.hcaptcha.render("), "renderiza o widget pela API hcaptcha em minusculas");
+ok(!/\bhCaptcha\b/.test(main), "API hCaptcha com casing incorreto ausente");
 ok((i18n.match(/'modal\.captchaErro'/g) || []).length === 3, "mensagem de erro do captcha nos 3 idiomas");
 const hcaptchaErrorListener = main.match(/s\.addEventListener\('error', \(\) => \{([\s\S]*?)\n    \}, \{ once: true \}\);/)?.[1] ?? '';
 ok(hcaptchaErrorListener.includes('hcaptchaFailed = true'), "listener de erro do hCaptcha define hcaptchaFailed = true");
@@ -97,6 +102,9 @@ ok(hcaptchaErrorListener.includes('hcaptchaFailed = true'), "listener de erro do
 const hcaptchaGateMatch = main.match(/if \(hcaptchaFailed\) \{([\s\S]*?)\n      \}/);
 const hcaptchaGate = hcaptchaGateMatch?.[1] ?? '';
 const hcaptchaGatePos = hcaptchaGateMatch?.index ?? -1;
+const emptyTokenGateMatch = main.match(/if \(!captchaToken\) \{([\s\S]*?)\n      \}/);
+const emptyTokenGate = emptyTokenGateMatch?.[1] ?? '';
+const emptyTokenGatePos = emptyTokenGateMatch?.index ?? -1;
 const captchaTokenPos = main.indexOf('const captchaToken =');
 const formDataPos = main.indexOf('const formData = new FormData(form)');
 const fetchPos = main.indexOf('fetch(WEB3FORMS_ENDPOINT');
@@ -105,5 +113,15 @@ ok(/\breturn;/.test(hcaptchaGate), "gate do hCaptcha retorna antes de continuar 
 ok(hcaptchaGatePos !== -1 && hcaptchaGatePos < captchaTokenPos, "gate do hCaptcha acontece antes da leitura do token");
 ok(hcaptchaGatePos !== -1 && hcaptchaGatePos < formDataPos, "gate do hCaptcha acontece antes de montar o FormData");
 ok(hcaptchaGatePos !== -1 && hcaptchaGatePos < fetchPos, "gate do hCaptcha acontece antes do fetch");
+ok(emptyTokenGateMatch !== null && /\breturn;/.test(emptyTokenGate), "gate de token vazio retorna antes de continuar o envio");
+ok(emptyTokenGatePos !== -1 && emptyTokenGatePos < formDataPos, "gate de token vazio acontece antes de montar o FormData");
+ok(emptyTokenGatePos !== -1 && emptyTokenGatePos < fetchPos, "gate de token vazio acontece antes do fetch");
+
+const failedSendMatch = main.match(/\.catch\(\(error\) => \{([\s\S]*?)\n        \}\)/);
+const failedSend = failedSendMatch?.[1] ?? '';
+const modalCloseMatch = main.match(/const close = \(\) => \{([\s\S]*?)\n    \};/);
+const modalClose = modalCloseMatch?.[1] ?? '';
+ok(failedSendMatch !== null && failedSend.includes("window.hcaptcha.reset(hcaptchaWidgetId)"), "falha de envio reseta o widget hcaptcha");
+ok(modalCloseMatch !== null && modalClose.includes("window.hcaptcha.reset(hcaptchaWidgetId)"), "fechamento do modal reseta o widget hcaptcha");
 
 console.log(`forms: ${n} verificacoes OK`);
