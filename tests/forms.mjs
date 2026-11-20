@@ -77,4 +77,13 @@ ok(privacidade.includes("Web3Forms") && i18n.includes("Web3Forms"), "politica e 
 ok(!existsSync(join(root, "functions/api/submit.js")), "Worker do formulario removido");
 ok(!existsSync(join(root, "tests/fuzz.mjs")), "fuzz antigo removido");
 
+// --- hCaptcha: barreira server-side do F2 ---
+ok(main.includes("const HCAPTCHA_SITEKEY = '50b2fe65-b00b-4b9e-ad62-3ba471098be2'"), "sitekey do hCaptcha (plano gratis do Web3Forms)");
+ok(main.includes("const HCAPTCHA_SCRIPT = 'https://js.hcaptcha.com/1/api.js?render=explicit'"), "script do hCaptcha com render=explicit");
+ok(main.includes('id="hcaptcha-widget"') && main.includes('class="h-captcha"'), "widget do hCaptcha no modal");
+ok(main.includes("h-captcha-response"), "le o token h-captcha-response");
+ok(main.indexOf("h-captcha-response") < main.indexOf("const formData = new FormData(form)"), "gate do captcha acontece antes de montar o FormData");
+ok(main.includes("hCaptcha.reset("), "reseta o widget do hCaptcha");
+ok((i18n.match(/'modal\.captchaErro'/g) || []).length === 3, "mensagem de erro do captcha nos 3 idiomas");
+
 console.log(`forms: ${n} verificacoes OK`);

@@ -4,6 +4,9 @@
   'use strict';
 
   const PT = 'pt-BR';
+  const PT_DICT = {
+    'modal.captchaErro': "Confirme que você não é um robô.",
+  };
   const LANGS = ['pt-BR', 'en-US', 'es'];
   const STORAGE_KEY = 'vizier.lang';
 
@@ -255,6 +258,7 @@
     'modal.assunto': "Subject *",
     'modal.assuntoErro': "Please enter a subject.",
     'modal.assuntoPh': "Message subject",
+    'modal.captchaErro': "Please confirm you're not a robot.",
     'modal.cnpj': "Company CNPJ *",
     'modal.cnpjErro': "Please enter a valid CNPJ.",
     'modal.contador': "Current accountant *",
@@ -729,6 +733,7 @@
     'modal.assunto': "Asunto *",
     'modal.assuntoErro': "Por favor, indique el asunto.",
     'modal.assuntoPh': "Asunto del mensaje",
+    'modal.captchaErro': "Confirme que no es un robot.",
     'modal.cnpj': "CNPJ de la empresa *",
     'modal.cnpjErro': "Por favor, introduzca un CNPJ válido.",
     'modal.contador': "Contador actual *",
@@ -955,7 +960,7 @@
     'wa.tributario': "¡Hola! Llegué a través del sitio web y me gustaría saber más sobre Planificación fiscal.",
   };
 
-  const T = { 'en-US': EN, es: ES };
+  const T = { 'pt-BR': PT_DICT, 'en-US': EN, es: ES };
 
   const ATTRS = [
     ['data-i18n-placeholder', 'placeholder'],

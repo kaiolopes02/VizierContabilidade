@@ -23,6 +23,28 @@
   // Web3Forms: a access key é pública por design (o provedor filtra spam/abuso).
   const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
   const WEB3FORMS_ACCESS_KEY = '6a9190b9-2c91-4546-9abe-e394fc0554bb';
+  const HCAPTCHA_SITEKEY = '50b2fe65-b00b-4b9e-ad62-3ba471098be2';
+  const HCAPTCHA_SCRIPT = 'https://js.hcaptcha.com/1/api.js?render=explicit';
+
+  let hcaptchaWidgetId = null;
+  let hcaptchaLoading = false;
+
+  const ensureHCaptcha = (container) => {
+    if (!container) return;
+    const render = () => {
+      if (hcaptchaWidgetId !== null || typeof window.hCaptcha === 'undefined') return;
+      hcaptchaWidgetId = window.hCaptcha.render(container, { sitekey: HCAPTCHA_SITEKEY });
+    };
+    if (typeof window.hCaptcha !== 'undefined') { render(); return; }
+    if (hcaptchaLoading) return;
+    hcaptchaLoading = true;
+    const s = document.createElement('script');
+    s.src = HCAPTCHA_SCRIPT;
+    s.async = true;
+    s.defer = true;
+    s.addEventListener('load', render, { once: true });
+    document.head.appendChild(s);
+  };
 
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
@@ -362,6 +384,10 @@
                 <span class="form-error" data-i18n="modal.lgpdErro">Você precisa aceitar a Política de Privacidade e os Termos de Uso.</span>
               </div>
             </div>
+            <div class="form-group">
+              <div id="hcaptcha-widget" class="h-captcha"></div>
+              <span class="form-error" data-i18n="modal.captchaErro">Confirme que você não é um robô.</span>
+            </div>
             <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Enviar Solicitação</button>
             <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--text-light);">
               <span data-i18n="modal.notaPre">Ao enviar, você concorda com nossa</span> <a href="/pages/politica-de-privacidade" style="color:var(--primary); text-decoration:underline;" data-i18n="modal.notaLink">Política de Privacidade</a>.
@@ -415,6 +441,7 @@
       }
       
       overlay.classList.add('active');
+      ensureHCaptcha(overlay.querySelector('#hcaptcha-widget'));
       prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       setBackgroundInert(true);
@@ -436,6 +463,7 @@
         form.reset();
         form.style.display = 'block';
       }
+      if (typeof window.hCaptcha !== 'undefined' && hcaptchaWidgetId !== null) window.hCaptcha.reset(hcaptchaWidgetId);
       const formSuccess = overlay.querySelector('#form-success');
       if (formSuccess) formSuccess.style.display = 'none';
 
@@ -584,8 +612,6 @@
         return;
       }
 
-      const formData = new FormData(form);
-
       const submitButton = form.querySelector('button[type="submit"]');
 
       const clearSubmitError = () => {
@@ -622,6 +648,16 @@
       };
 
       clearSubmitError();
+
+      const captchaToken = form.querySelector('textarea[name="h-captcha-response"]')?.value?.trim();
+      if (!captchaToken) {
+        form.querySelector('#hcaptcha-widget')?.closest('.form-group')?.classList.add('error');
+        showSubmitError(tr('modal.captchaErro', 'Confirme que você não é um robô.'));
+        return;
+      }
+
+      const formData = new FormData(form);
+
       if (submitButton) {
         submitButton.disabled = true;
         submitButton.textContent = tr('modal.enviando', 'Enviando...');
@@ -643,6 +679,7 @@
           showFormSuccess();
         })
         .catch((error) => {
+          if (typeof window.hCaptcha !== 'undefined' && hcaptchaWidgetId !== null) window.hCaptcha.reset(hcaptchaWidgetId);
           console.error('[Vizier] Falha no envio:', error);
           showSubmitError(tr('modal.erroEnvio', 'Nao foi possivel enviar agora. Verifique sua conexao e tente novamente.'));
         })
