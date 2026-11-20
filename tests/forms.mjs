@@ -63,10 +63,10 @@ ok(headers.includes("frame-ancestors 'none'"), "frame-ancestors continua none");
 // --- Versoes de cache em todas as paginas ---
 for (const f of htmls) {
   const html = read(f);
-  ok(html.includes("/js/main.js?v=11"), `${f} usa main.js?v=11`);
-  ok(html.includes("/js/i18n.js?v=5"), `${f} usa i18n.js?v=5`);
-  ok(!html.includes("/js/i18n.js?v=4"), `${f} nao usa i18n.js?v=4`);
-  ok((html.match(/\/js\/i18n\.js\?v=5/g) || []).length === 1, `${f} usa i18n.js?v=5 exatamente uma vez`);
+  ok(html.includes("/js/main.js?v=12"), `${f} usa main.js?v=12`);
+  ok(html.includes("/js/i18n.js?v=6"), `${f} usa i18n.js?v=6`);
+  ok(!html.includes("/js/i18n.js?v=5"), `${f} nao usa i18n.js?v=5`);
+  ok((html.match(/\/js\/i18n\.js\?v=6/g) || []).length === 1, `${f} usa i18n.js?v=6 exatamente uma vez`);
 }
 
 // --- Transparencia LGPD do hCaptcha ---
@@ -109,7 +109,7 @@ ok(!existsSync(join(root, "tests/fuzz.mjs")), "fuzz antigo removido");
 // --- hCaptcha: barreira server-side do F2 ---
 ok(main.includes("const HCAPTCHA_SITEKEY = '50b2fe65-b00b-4b9e-ad62-3ba471098be2'"), "sitekey do hCaptcha (plano gratis do Web3Forms)");
 const hcaptchaScriptUrl = main.match(/const HCAPTCHA_SCRIPT = '([^']+)'/)?.[1] ?? '';
-ok(hcaptchaScriptUrl === 'https://js.hcaptcha.com/1/api.js?render=explicit&onload=vizierHCaptchaReady', "script do hCaptcha usa render=explicit e onload=vizierHCaptchaReady");
+ok(hcaptchaScriptUrl === 'https://js.hcaptcha.com/1/api.js?render=explicit&onload=vizierHCaptchaReady&recaptchacompat=off', "script do hCaptcha usa render=explicit, onload e recaptchacompat=off");
 ok(main.includes('id="hcaptcha-widget"') && main.includes('class="h-captcha"'), "widget do hCaptcha no modal");
 const formStart = main.indexOf('<form id="form-orcamento"');
 const formEnd = main.indexOf('</form>', formStart);

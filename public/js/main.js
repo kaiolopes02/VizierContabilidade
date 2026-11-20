@@ -24,7 +24,9 @@
   const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
   const WEB3FORMS_ACCESS_KEY = '6a9190b9-2c91-4546-9abe-e394fc0554bb';
   const HCAPTCHA_SITEKEY = '50b2fe65-b00b-4b9e-ad62-3ba471098be2';
-  const HCAPTCHA_SCRIPT = 'https://js.hcaptcha.com/1/api.js?render=explicit&onload=vizierHCaptchaReady';
+  // recaptchacompat=off: sem isso o widget tambem preenche
+  // g-recaptcha-response e o Web3Forms devolve 400 (feature Pro de reCaptcha).
+  const HCAPTCHA_SCRIPT = 'https://js.hcaptcha.com/1/api.js?render=explicit&onload=vizierHCaptchaReady&recaptchacompat=off';
 
   let hcaptchaWidgetId = null;
   let hcaptchaLoading = false;
