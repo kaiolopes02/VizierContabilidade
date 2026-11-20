@@ -62,7 +62,7 @@ ok(headers.includes("frame-ancestors 'none'"), "frame-ancestors continua none");
 // --- Versoes de cache em todas as paginas ---
 for (const f of htmls) {
   const html = read(f);
-  ok(html.includes("/js/main.js?v=10"), `${f} usa main.js?v=10`);
+  ok(html.includes("/js/main.js?v=11"), `${f} usa main.js?v=11`);
   ok(html.includes("/js/i18n.js?v=4"), `${f} usa i18n.js?v=4`);
 }
 
