@@ -53,6 +53,12 @@ ok(!main.includes("innerHTML = message") && !main.includes("innerHTML = error"),
 ok(/connect-src[^;]*https:\/\/api\.web3forms\.com/.test(headers), "CSP connect-src libera Web3Forms");
 ok(/form-action[^;]*https:\/\/api\.web3forms\.com/.test(headers), "CSP form-action libera Web3Forms");
 
+// --- CSP do hCaptcha ---
+ok(/script-src[^;]*https:\/\/hcaptcha\.com[^;]*https:\/\/\*\.hcaptcha\.com/.test(headers), "CSP script-src permite hCaptcha");
+ok(/frame-src[^;]*https:\/\/hcaptcha\.com[^;]*https:\/\/\*\.hcaptcha\.com/.test(headers), "CSP frame-src permite hCaptcha");
+ok(/connect-src[^;]*https:\/\/hcaptcha\.com[^;]*https:\/\/\*\.hcaptcha\.com/.test(headers), "CSP connect-src permite hCaptcha");
+ok(headers.includes("frame-ancestors 'none'"), "frame-ancestors continua none");
+
 // --- Versoes de cache em todas as paginas ---
 for (const f of htmls) {
   const html = read(f);
@@ -85,5 +91,7 @@ ok(main.includes("h-captcha-response"), "le o token h-captcha-response");
 ok(main.indexOf("h-captcha-response") < main.indexOf("const formData = new FormData(form)"), "gate do captcha acontece antes de montar o FormData");
 ok(main.includes("hCaptcha.reset("), "reseta o widget do hCaptcha");
 ok((i18n.match(/'modal\.captchaErro'/g) || []).length === 3, "mensagem de erro do captcha nos 3 idiomas");
+ok(main.includes("hcaptchaFailed"), "flag de falha do carregamento do script do hCaptcha");
+ok(/if \(hcaptchaFailed\)[\s\S]*modal\.erroEnvio/.test(main), "gate usa modal.erroEnvio quando o script do hCaptcha falhou");
 
 console.log(`forms: ${n} verificacoes OK`);

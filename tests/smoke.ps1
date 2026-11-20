@@ -48,6 +48,7 @@ Write-Host "`n== B. Headers de seguranca ==" -ForegroundColor Cyan
 $head = (curl.exe -s -I "$Base/") -join "`n"
 Check "CSP sem script unsafe-inline" "True" ($head -notmatch "script-src[^;]*'unsafe-inline'")
 Check "CSP libera Web3Forms em connect-src e form-action" "True" (($head -match "connect-src[^;]*https://api\.web3forms\.com") -and ($head -match "form-action[^;]*https://api\.web3forms\.com"))
+Check "CSP libera hCaptcha" "True" (($head -match "https://hcaptcha\.com") -and ($head -match "https://\*\.hcaptcha\.com"))
 Check "HSTS 1 ano" "True" ($head -match "max-age=31536000")
 Check "X-Frame-Options DENY" "True" ($head -match "X-Frame-Options: DENY")
 Check "COOP" "True" ($head -match "Cross-Origin-Opener-Policy: same-origin")

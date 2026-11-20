@@ -36,6 +36,9 @@ O servidor fica em `http://127.0.0.1:8788`. O formulário envia direto para
 `https://api.web3forms.com/submit` pelo navegador; não há função de servidor nem
 secret no projeto. A access key do Web3Forms é pública por design.
 
+O formulário depende do modo **hCaptcha** do Web3Forms; o modo precisa estar ativo em
+`app.web3forms.com` (Settings → Block Spam → hCaptcha).
+
 ## Testes
 
 Verificações estáticas (markup, handler, CSP e resíduos), sem servidor:

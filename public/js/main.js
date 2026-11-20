@@ -28,6 +28,7 @@
 
   let hcaptchaWidgetId = null;
   let hcaptchaLoading = false;
+  let hcaptchaFailed = false;
 
   const ensureHCaptcha = (container) => {
     if (!container) return;
@@ -43,6 +44,10 @@
     s.async = true;
     s.defer = true;
     s.addEventListener('load', render, { once: true });
+    s.addEventListener('error', () => {
+      hcaptchaFailed = true;
+      s.remove();
+    }, { once: true });
     document.head.appendChild(s);
   };
 
@@ -648,6 +653,11 @@
       };
 
       clearSubmitError();
+
+      if (hcaptchaFailed) {
+        showSubmitError(tr('modal.erroEnvio', 'Não foi possível enviar agora. Verifique sua conexão e tente novamente.'));
+        return;
+      }
 
       const captchaToken = form.querySelector('textarea[name="h-captcha-response"]')?.value?.trim();
       if (!captchaToken) {
