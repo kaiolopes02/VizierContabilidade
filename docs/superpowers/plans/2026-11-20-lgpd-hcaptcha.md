@@ -39,10 +39,10 @@
 - Consumes: chaves `privtext4a`, `legal.updated`; atributo `data-i18n`.
 - Produces: chave `privupdated` em `en-US`/`es`; `i18n.js?v=5` em todos os HTMLs.
 
-- [ ] **Step 1: Escrever testes falhos** para hCaptcha nos três idiomas, data da Política, data intacta dos Termos e `i18n.js?v=5`.
-- [ ] **Step 2: Executar `node tests/forms.mjs`** e confirmar falha pelas novas expectativas.
-- [ ] **Step 3: Atualizar o texto e as traduções** com o conteúdo especificado no design.
-- [ ] **Step 4: Atualizar `i18n.js?v=5`** nos 13 HTMLs.
-- [ ] **Step 5: Executar `node tests/forms.mjs`** e confirmar todas as verificações verdes.
-- [ ] **Step 6: Rodar smoke local** com `wrangler pages dev` e `tests/smoke.ps1`; confirmar 0 falhas.
-- [ ] **Step 7: Commitar** com mensagem `docs: atualiza LGPD para o hCaptcha`.
+- [x] **Step 1: Escrever testes falhos** para hCaptcha nos três idiomas, data da Política, data intacta dos Termos e `i18n.js?v=5`.
+- [x] **Step 2: Executar `node tests/forms.mjs`** e confirmar falha pelas novas expectativas.
+- [x] **Step 3: Atualizar o texto e as traduções** com o conteúdo especificado no design.
+- [x] **Step 4: Atualizar `i18n.js?v=5`** nos 13 HTMLs.
+- [x] **Step 5: Executar `node tests/forms.mjs`** e confirmar todas as verificações verdes.
+- [x] **Step 6: Rodar smoke local** com `wrangler pages dev` e `tests/smoke.ps1`; confirmar 0 falhas.
+- [x] **Step 7: Commitar** com mensagem `docs: atualiza LGPD para o hCaptcha`.
